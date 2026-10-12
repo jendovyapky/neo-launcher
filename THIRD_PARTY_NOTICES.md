@@ -59,3 +59,9 @@ SOFTWARE.
 Část logiky (rozpoznání typu aplikací, seznam vyloučených balíčků, spouštění přes
 vrshell, online zdroje bannerů) vychází z [Lightning Launcheru](https://github.com/threethan/LightningLauncher)
 (threethan), GPL-3.0.
+
+## jMuxer (assets/cast/jmuxer.min.js)
+
+jMuxer 2.1.4 – https://github.com/samirkumardas/jmuxer
+Copyright (c) 2018 Samir Das. Licensed under the MIT License.
+Přehrávání streamu H.264 v prohlížeči (Streamovat do prohlížeče).
