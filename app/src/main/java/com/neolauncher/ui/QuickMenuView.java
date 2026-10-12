@@ -120,6 +120,14 @@ public final class QuickMenuView extends View {
     private final android.graphics.Matrix lastMatrix = new android.graphics.Matrix();
     private final Paint artPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
 
+    /** Prave bezi streamovani do prohlizece -> dlazdice Streamovat ukaze "Vysila". */
+    private boolean castActive;
+
+    public void setCastActive(boolean on) {
+        castActive = on;
+        invalidate();
+    }
+
     private int hovered = -1;
     private int pressed = -1;
     private boolean draggingSlider;
@@ -578,10 +586,13 @@ public final class QuickMenuView extends View {
             final Paint.FontMetrics fm = tileText.getFontMetrics();
             final float iconS = dp(22), gapY = dp(6), textH = fm.descent - fm.ascent;
             final float top = -(iconS + gapY + textH) / 2f;
-            Icons.draw(c, TILE_ICONS[i], 0, top + iconS / 2f, iconS, col, dp(1.8f), 1f, icon);
+            // Bezici streamovani: akcent (Palette.COBALT_LIGHT = pokrok/vyber) a nazev "Vysila".
+            final boolean live = i == T_CAST && castActive;
+            Icons.draw(c, TILE_ICONS[i], 0, top + iconS / 2f, iconS,
+                    live ? Palette.alpha(Palette.COBALT_LIGHT, ac) : col, dp(1.8f), 1f, icon);
             tileText.setTextAlign(Paint.Align.CENTER);
             tileText.setColor(Palette.alpha(Palette.TEXT, 0.94f * ac));
-            c.drawText(TILE_LABELS[i], 0, top + iconS + gapY - fm.ascent, tileText);
+            c.drawText(live ? "Vysílá" : TILE_LABELS[i], 0, top + iconS + gapY - fm.ascent, tileText);
             tileText.setTextAlign(Paint.Align.LEFT);
         }
         c.restore();

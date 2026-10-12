@@ -43,6 +43,8 @@ public final class Updater {
      * pripad, ze kod zustane soukromy a APK se budou zverejnovat zvlast.
      */
     private static final String[] FEEDS = {
+            // Repo se 2026-10-12 presunulo pod jendovyapky (GitHub stare jmeno presmeruje, ale radsi primo).
+            "jendovyapky/neo-launcher",
             "lichicks/neo-launcher",
             "lichicks/neo-launcher-releases",
     };

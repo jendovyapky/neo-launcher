@@ -43,6 +43,7 @@ import com.neolauncher.ui.Icons;
 import com.neolauncher.ui.Palette;
 import com.neolauncher.ui.NeoLauncherView;
 import com.neolauncher.ui.OverlayHost;
+import com.neolauncher.ui.CastSheet;
 import com.neolauncher.ui.PowerSheet;
 import com.neolauncher.ui.QuickMenuView;
 import com.neolauncher.ui.SearchSheet;
@@ -592,6 +593,7 @@ public class LauncherActivity extends Activity
             }
         });
         menu.setBattery(batteryPct, batteryCharging, batteryFast);
+        menu.setCastActive(com.neolauncher.cast.Cast.isRunning(this));
         menu.setBatteryInfo(batteryInfoText());
         final AppEntry last = lastPlayed();
         if (last != null) {
@@ -765,13 +767,10 @@ public class LauncherActivity extends Activity
                 ok = openPackage("com.oculus.browser", "Prohlížeč");
                 break;
             case QuickMenuView.T_CAST:
-                // Sdileni Questu (streamovani do TV / telefonu, nahravani, snimek): od Horizon OS v81
-                // je to aplikace Fotoaparat (com.oculus.metacam), driv panel systemux://sharing
-                // (Lightning Launcher to deli stejne). Jinak aspon rychle nastaveni Questu.
-                ok = openPackage("com.oculus.metacam", "Fotoaparát")
-                        || (com.neolauncher.data.Platform.vrOsVersion() < 81 && openPanel("systemux://sharing"))
-                        || openPanel("systemux://quick_settings");
-                break;
+                // Streamovani do prohlizece (quest.jendovyapky.eu) - vlastni okno Nea.
+                // Puvodni sdileni Questu je v nem pod tlacitkem "Sdileni Questu".
+                showCastSheet();
+                return;
             case QuickMenuView.T_SLEEP:
                 overlay.close();
                 if (!MetaAddon.sleep(this)) needMetaService();
@@ -785,6 +784,49 @@ public class LauncherActivity extends Activity
         }
         if (ok) overlay.close();
         else Toast.makeText(this, "Na tomto zařízení není k dispozici", Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Okno Streamovat: obraz a zvuk Questu do prohlizece ve stejne Wi-Fi. Nahravani
+     * bezi v procesu :cast (com.neolauncher.cast), takze pad streamovani Neo neshodi.
+     */
+    public void showCastSheet() {
+        overlay.show(CastSheet.build(this, new CastSheet.Actions() {
+            @Override
+            public void start() {
+                com.neolauncher.cast.Cast.start(LauncherActivity.this);
+            }
+
+            @Override
+            public void stop() {
+                com.neolauncher.cast.Cast.stop(LauncherActivity.this);
+                showLive(Icons.CAST, "Streamování zastaveno", NeoLauncherView.LIVE_ICON_ONLY, 2500);
+            }
+
+            @Override
+            public void systemSharing() {
+                overlay.close();
+                openSystemSharing();
+            }
+
+            @Override
+            public void close() {
+                overlay.close();
+            }
+        }), null, null, launcher.frameRect(), Glass.dpi(this, 560));
+    }
+
+    /**
+     * Puvodni sdileni Questu (streamovani do TV / telefonu, nahravani, snimek): od Horizon OS v81
+     * je to aplikace Fotoaparat (com.oculus.metacam), driv panel systemux://sharing
+     * (Lightning Launcher to deli stejne). Jinak aspon rychle nastaveni Questu.
+     */
+    private void openSystemSharing() {
+        MetaAddon.suppress(this, 4000);
+        boolean ok = openPackage("com.oculus.metacam", "Fotoaparát")
+                || (com.neolauncher.data.Platform.vrOsVersion() < 81 && openPanel("systemux://sharing"))
+                || openPanel("systemux://quick_settings");
+        if (!ok) Toast.makeText(this, "Na tomto zařízení není k dispozici", Toast.LENGTH_SHORT).show();
     }
 
     /**

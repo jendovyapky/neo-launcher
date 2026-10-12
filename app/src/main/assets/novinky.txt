@@ -1,3 +1,10 @@
+# Streamování do prohlížeče
+• Dlaždice Streamovat v rychlém menu otevře nové okno: dej Spustit vysílání a na počítači ve stejné Wi-Fi otevři quest.jendovyapky.eu – Quest se tam najde sám a obraz jede v prohlížeči, plynule a i se zvukem
+• Zvuk je na počítači na začátku vypnutý, ať hru ve stejné místnosti neslyšíte dvakrát. Zapneš ho tlačítkem Zvuk – sám se srovná s obrazem a pod třemi tečkami doladíš hlasitost a posun (třeba pro bezdrátový reproduktor)
+• Poprvé se Quest zeptá na povolení nahrávat obrazovku a zvuk her – mikrofon se nepoužívá
+• Když vysílání běží, dlaždice svítí a píše Vysílá. Zastavíš ho ve stejném okně
+• Původní sdílení Questu (do televize, nahrávání, snímky) je v okně Streamovat pod tlačítkem Sdílení Questu
+
 # Hra na pozadí, upozornění na baterii a vypnutí Questu
 • Neo si teď samo hlídá hru, která běží na pozadí, a dole ukáže lištu Pokračovat / Ukončit – i když Neo otevřeš jinak než přes Meta tlačítko. Hra už tak nebude potichu vybíjet baterku
 • Kdyby lišta ukazovala hru, kterou jsi už zavřel, klepni na ✕ – pro tuhle hru se neukáže, dokud ji zase nespustíš

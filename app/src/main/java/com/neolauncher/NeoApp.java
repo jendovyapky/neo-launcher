@@ -18,6 +18,8 @@ public class NeoApp extends Application {
     public void onCreate() {
         super.onCreate();
         sInstance = this;
+        // Proces :cast (streamovani, com.neolauncher.cast) launcher nepotrebuje - nic nenacitat.
+        if (Application.getProcessName().endsWith(":cast")) return;
         prefs = new Prefs(this);
         apps = new AppRepository(this, prefs);
         artwork = new ArtworkLoader(this);

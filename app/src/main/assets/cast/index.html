@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Quest Cast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@700;900&family=Geist:wght@400;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07080c; --panel: rgba(20, 23, 32, .72); --line: rgba(255,255,255,.08);
+    --text: #eef1f6; --muted: #8b93a7; --accent: #7fd4ff; --ok: #3ecf8e; --bad: #ff6b7a;
+    --eye: #8fe4ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 15px/1.45 Geist, system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+
+  /* ---------- video ---------- */
+  #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; }
+  #view { position: relative; overflow: hidden; opacity: 0; transition: opacity .6s ease; }
+  body.live #view { opacity: 1; }
+  #v { display: block; width: 100%; height: 100%; object-fit: fill; background: #000; }
+
+  /* ---------- panáček (když stream neběží) ---------- */
+  #idle { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 22px; padding: 24px; transition: opacity .6s ease, visibility .6s;
+    background:
+      radial-gradient(120% 80% at 50% 110%, #3b2a6b 0%, transparent 60%),
+      radial-gradient(90% 70% at 15% -10%, #23305e 0%, transparent 60%),
+      linear-gradient(180deg, #0c0e1a 0%, #141029 100%); }
+  #idle::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .14; mix-blend-mode: overlay; z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  body.live #idle { opacity: 0; visibility: hidden; }
+
+  #sub { position: relative; z-index: 2; color: var(--muted); font-size: 13px; text-align: center; max-width: 520px; }
+
+  /* ---------- lišta ---------- */
+  #bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 5;
+    display: flex; gap: 6px; align-items: center; padding: 6px; border-radius: 18px;
+    background: rgba(18, 20, 30, .66); border: 1px solid var(--line); box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+    max-width: calc(100vw - 24px); transition: opacity .35s, transform .35s; }
+  body.live.calm:not(.menu) #bar { opacity: 0; transform: translate(-50%, 12px); pointer-events: none; }
+  body.live.calm:not(.menu) { cursor: none; }
+  .seg { display: flex; background: rgba(255,255,255,.05); border-radius: 12px; padding: 3px; }
+  button { appearance: none; border: 0; background: transparent; color: var(--text); font: 500 13px Geist, system-ui, sans-serif;
+    padding: 8px 12px; border-radius: 9px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 7px;
+    transition: background .15s, color .15s, transform .15s; }
+  button:hover { background: rgba(255,255,255,.08); }
+  button:active { transform: scale(.96); }
+  button.on { background: var(--text); color: #0b0d12; }
+  button[disabled] { opacity: .35; cursor: not-allowed; }
+  button svg { width: 16px; height: 16px; flex: none; }
+  .icon { padding: 8px 10px; }
+  #snd .x { display: none; } #snd:not(.live) .w1, #snd:not(.live) .w2 { display: none; } #snd:not(.live) .x { display: inline; }
+  #live { display: inline-flex; align-items: center; gap: 7px; padding: 0 10px 0 6px; font: 12px "Geist Mono", ui-monospace, monospace;
+    color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); }
+  .dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  @media (max-width: 640px) { #live { display: none; } .lbl { display: none; } }
+
+  /* ---------- menu „⋯“ ---------- */
+  #menu { position: fixed; left: 50%; bottom: 78px; z-index: 6; width: min(360px, calc(100vw - 24px));
+    transform: translateX(-50%) translateY(8px) scale(.97); transform-origin: 50% 100%; opacity: 0; pointer-events: none;
+    padding: 16px 18px 14px; border-radius: 20px; background: rgba(18, 20, 30, .78); border: 1px solid var(--line);
+    box-shadow: 0 20px 60px rgba(0,0,0,.45); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%);
+    transition: opacity .2s ease, transform .28s cubic-bezier(.2,1.3,.4,1); }
+  body.menu #menu { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0) scale(1); }
+  .row { display: grid; gap: 10px; padding: 10px 0; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .row-h b { font-weight: 600; font-size: 13.5px; }
+  .row-h span { font: 12px "Geist Mono", ui-monospace, monospace; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .hint { color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .reset { padding: 3px 9px; font-size: 11.5px; color: var(--muted); border-radius: 7px; background: rgba(255,255,255,.06); }
+  #info { font: 11.5px/1.6 "Geist Mono", ui-monospace, monospace; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* ---------- posuvník ---------- */
+  .slider { --a: 0%; --b: 50%; -webkit-appearance: none; appearance: none; width: 100%; height: 22px; margin: 0; background: transparent; cursor: pointer; }
+  .slider:focus { outline: none; }
+  .slider::-webkit-slider-runnable-track { height: 6px; border-radius: 6px;
+    background: linear-gradient(90deg, rgba(255,255,255,.1) var(--a), var(--accent) var(--a), #b6a8ff var(--b), rgba(255,255,255,.1) var(--b)); }
+  .slider::-moz-range-track { height: 6px; border-radius: 6px;
+    background: linear-gradient(90deg, rgba(255,255,255,.1) var(--a), var(--accent) var(--a), #b6a8ff var(--b), rgba(255,255,255,.1) var(--b)); }
+  .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 50%; background: #fff;
+    border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.4), 0 0 0 0 rgba(143,228,255,.35); transition: transform .15s, box-shadow .2s; }
+  .slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  .slider:hover::-webkit-slider-thumb, .slider:focus-visible::-webkit-slider-thumb { transform: scale(1.12); box-shadow: 0 2px 8px rgba(0,0,0,.4), 0 0 0 6px rgba(143,228,255,.18); }
+  .slider:active::-webkit-slider-thumb { transform: scale(1.2); }
+  .rt { display: inline-flex; align-items: baseline; gap: 8px; }
+  .ticks i { position: absolute; transform: translateX(-50%); font-style: normal; }
+  .ticks i::before { content: ""; position: absolute; left: 50%; top: -9px; width: 1px; height: 5px; background: rgba(255,255,255,.25); }
+  .ticks { position: relative; display: flex; justify-content: space-between; margin-top: -4px; font: 10.5px "Geist Mono", ui-monospace, monospace; color: rgba(139,147,167,.7); }
+</style>
+</head>
+<body>
+
+<div id="stage"><div id="view"><video id="v" muted autoplay playsinline disablepictureinpicture></video></div></div>
+
+<div id="idle">
+  <div id="quba"></div>
+  <div id="sub"></div>
+</div>
+
+<div id="bar">
+  <span id="live"><span class="dot" id="dot"></span><span id="liveText">připojuji…</span></span>
+  <div class="seg" id="qSeg">
+    <button data-q="side=1280&fps=60&mbps=8">Plynulé</button>
+    <button data-q="side=1920&fps=60&mbps=14">Vyvážené</button>
+    <button data-q="side=2560&fps=60&mbps=24">Ostré</button>
+  </div>
+  <button id="snd" title="Zvuk je výchozí vypnutý, ať ho ve stejné místnosti neslyšíte dvakrát"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M18.5 5.5a9 9 0 0 1 0 13"/><path class="x" d="m16 9 6 6m0-6-6 6"/></svg><span class="lbl">Zvuk</span></button>
+  <button id="fs" class="icon" title="Celá obrazovka (dvojklik na obraz)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  <button id="more" class="icon" title="Další nastavení" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+</div>
+
+<div id="menu" role="dialog" aria-label="Nastavení">
+  <div class="row">
+    <div class="row-h"><b>Hlasitost</b><span id="volVal">100 %</span></div>
+    <input id="vol" class="slider" type="range" min="0" max="100" step="1" value="100">
+  </div>
+  <div class="row">
+    <div class="row-h"><b>Posun zvuku</b><span class="rt"><span id="syncVal">0 ms</span>
+      <button class="reset" id="syncReset" title="Vrátit na automatiku">auto</button></span></div>
+    <input id="syncIn" class="slider" type="range" min="-500" max="300" step="10" value="0">
+    <div class="ticks"><span>dřív</span><i style="left:62.5%">0</i><span>později</span></div>
+    <div class="hint">Zvuk se k obrazu srovnává sám. Když jde pozadu (Bluetooth repro), posuň doleva. Obraz se o tolik pozdrží.</div>
+  </div>
+  <div class="row"><div id="info">–</div></div>
+</div>
+
+<script src="/jmuxer.js"></script>
+<script src="/quba.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const LINES = {
+  hleda:  ['Hledám Quest…', 'Šmejdím po Wi-Fi…', 'Moment, ladím anténky.'],
+  pauza:  ['Quest si dal pauzu.', 'Zívám. V Questu dej znovu Streamovat.', 'Nic se nevysílá. Tak si dám šlofíka.'],
+  offline:['Quest spí nebo je mimo Wi-Fi. Až se probudí, naskočím sám.', 'Pšt. Quest je offline, čekám.', 'Nikde nikdo. Počkám, až se Quest vrátí.'],
+  chyba:  ['Něco se pokazilo. Zkouším to znovu.', 'Au. Stream zakopnul, zvedám ho.'],
+  jede:   ['Jedem!', 'Obraz naskočil!', 'Je to tam!'],
+};
+const lineIdx = {};
+const line = (g) => { const l = LINES[g]; lineIdx[g] = lineIdx[g] == null ? Math.floor(Math.random() * l.length) : (lineIdx[g] + 1) % l.length; return l[lineIdx[g]]; };
+const Q = Quba.mount($('#quba'), { scene: $('#idle'), sleepPoke: 'Hm? Co je? Quest pořád spí…' });
+
+/* =====================================================================
+   STREAM – H.264 z Questu → jMuxer (Media Source Extensions) → <video>
+   ===================================================================== */
+const v = $('#v'), view = $('#view'), sub = $('#sub');
+let state = '', jm = null, abort = null, connecting = false, lastFrameAt = 0, outW = 16, outH = 9;
+let ptsBase = null;   // pts (µs) snímku, který je v <video> na čase 0 → zobrazený pts = ptsBase + currentTime
+const HDR = 16;       // [délka 4][trvání ms 2][příznaky 1][typ 1][pts µs 8]
+const rdPts = (b, o) => { let x = 0; for (let i = 0; i < 8; i++) x = x * 256 + b[o + i]; return x; };
+const demo = new URLSearchParams(location.search).get('demo');
+
+function setState(s, detail = '') {
+  if (s === state) { if (detail) sub.textContent = detail; return; }
+  const prev = state; state = s;
+  document.body.classList.toggle('live', s === 'jede');
+  sub.textContent = detail;
+  Q.pause(s === 'jede');
+  if (s === 'hleda') Q.set('hleda', line('hleda'));
+  if (s === 'pauza') Q.set('ospaly', line('pauza'), { act: 'yawn' });
+  if (s === 'offline') Q.set('spi', line('offline'));
+  if (s === 'chyba') Q.set('chyba', line('chyba'));
+  if (s === 'jede' && prev) Q.set('radost', line('jede'), { act: 'hop' });
+  if (s === 'pauza') setTimeout(() => { if (state === 'pauza') Q.set('spi'); }, 9000);
+}
+
+function stopStream() {
+  try { abort?.abort(); } catch {}
+  abort = null;
+  try { jm?.destroy(); } catch {}
+  jm = null;
+  connecting = false;
+}
+
+async function startStream() {
+  if (connecting || typeof JMuxer === 'undefined') return;
+  stopStream();
+  connecting = true;
+  abort = new AbortController();
+  const ctl = abort;
+  jm = new JMuxer({
+    node: v, mode: 'video', flushingTime: 0, fps: 60, clearBuffer: true, maxDelay: 300,
+    onError: () => { if (ctl === abort) { stopStream(); setState('chyba', 'Přehrávač zakopnul, restartuji…'); } },
+  });
+  lastFrameAt = performance.now();
+  ptsBase = null;
+  try {
+    const r = await fetch('/video', { signal: ctl.signal, cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const rd = r.body.getReader();
+    let buf = new Uint8Array(0);
+    for (;;) {
+      const { value, done } = await rd.read();
+      if (done) break;
+      if (buf.length) { const nb = new Uint8Array(buf.length + value.length); nb.set(buf); nb.set(value, buf.length); buf = nb; }
+      else buf = value;
+      let off = 0;
+      while (buf.length - off >= HDR) {
+        const len = ((buf[off] << 24) | (buf[off + 1] << 16) | (buf[off + 2] << 8) | buf[off + 3]) >>> 0;
+        if (buf.length - off < HDR + len) break;
+        const dur = (buf[off + 4] << 8) | buf[off + 5];
+        const pts = rdPts(buf, off + 8);
+        if (ptsBase == null) ptsBase = pts;
+        jm?.feed({ video: buf.slice(off + HDR, off + HDR + len), duration: dur || 16 });
+        off += HDR + len;
+        lastFrameAt = performance.now();
+      }
+      buf = off ? buf.slice(off) : buf;
+    }
+  } catch (e) {
+    if (ctl.signal.aborted) return;
+  } finally {
+    if (ctl === abort) connecting = false;
+  }
+}
+
+/* =====================================================================
+   ZVUK – PCM z Questu (48 kHz, stereo, 20 ms) → Web Audio.
+   Každý kousek má časové razítko ve stejných hodinách jako snímky obrazu,
+   takže ho pustíme přesně ve chvíli, kdy <video> ukazuje stejný okamžik.
+   Výchozí stav je VYPNUTO (ať ve stejné místnosti nehraje hra dvakrát).
+   ===================================================================== */
+const Snd = {
+  on: false, ctx: null, abort: null, next: 0, gain: null,
+  offset: 0, vol: 100, dropped: 0, played: 0, lastDelay: null, mode: '', reason: null,
+  shownPts() { return ptsBase == null || state !== 'jede' ? null : ptsBase + v.currentTime * 1e6; },
+  async start() {
+    if (this.on) return;
+    this.on = true; ui();
+    const AC = window.AudioContext || window.webkitAudioContext;
+    this.ctx = new AC({ latencyHint: 'interactive', sampleRate: 48000 });
+    try { await this.ctx.resume(); } catch {}
+    this.gain = this.ctx.createGain(); this.gain.gain.value = this.vol / 100; this.gain.connect(this.ctx.destination);
+    this.next = 0; this.dropped = 0; this.played = 0;
+    this.loop();
+  },
+  stop() {
+    this.on = false; ui();
+    try { this.abort?.abort(); } catch {}
+    this.abort = null;
+    try { this.ctx?.close(); } catch {}
+    this.ctx = null;
+  },
+  async loop() {
+    while (this.on) {
+      const ctl = this.abort = new AbortController();
+      try {
+        const r = await fetch('/audio', { signal: ctl.signal, cache: 'no-store' });
+        if (!r.ok) { this.reason = (await r.text()) || 'zvuk teď nejde'; ui(); await sleep(3000); continue; }
+        this.reason = null; ui();
+        const rd = r.body.getReader();
+        let buf = new Uint8Array(0);
+        for (;;) {
+          const { value, done } = await rd.read();
+          if (done) break;
+          if (buf.length) { const nb = new Uint8Array(buf.length + value.length); nb.set(buf); nb.set(value, buf.length); buf = nb; }
+          else buf = value;
+          let off = 0;
+          while (buf.length - off >= HDR) {
+            const len = ((buf[off] << 24) | (buf[off + 1] << 16) | (buf[off + 2] << 8) | buf[off + 3]) >>> 0;
+            if (buf.length - off < HDR + len) break;
+            this.play(buf.subarray(off + HDR, off + HDR + len), rdPts(buf, off + 8));
+            off += HDR + len;
+          }
+          buf = off ? buf.slice(off) : buf;
+        }
+      } catch (e) { if (!this.on) return; }
+      await sleep(800);
+    }
+  },
+  play(pcm, pts) {
+    const ctx = this.ctx; if (!ctx || ctx.state === 'closed') return;
+    const n = pcm.length >> 2; // stereo s16 → snímků
+    const ab = ctx.createBuffer(2, n, 48000);
+    const L = ab.getChannelData(0), R = ab.getChannelData(1);
+    const dv = new DataView(pcm.buffer, pcm.byteOffset, pcm.byteLength);
+    for (let i = 0; i < n; i++) { L[i] = dv.getInt16(i * 4, true) / 32768; R[i] = dv.getInt16(i * 4 + 2, true) / 32768; }
+
+    // za kolik sekund ukáže video tenhle okamžik?
+    const shown = this.shownPts();
+    let delay;
+    if (shown != null && Math.abs(pts - shown) < 3e6) { delay = (pts - shown) / 1e6; this.mode = 'auto'; }
+    else { delay = lagSec(); this.mode = 'odhad'; } // hodiny nesedí / video ještě nejede → podle zpoždění videa
+    const outLat = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
+    const now = ctx.currentTime;
+    const ideal = now + delay - outLat + this.offset / 1000;
+    this.lastDelay = delay;
+    if (ideal < now + .005) { // pozdě – tenhle kousek už nestihneme
+      this.dropped++;
+      if (this.dropped > 25 && this.dropped > this.played) { this.next = 0; this.schedule(ab, now + .03, 1); }
+      return;
+    }
+    // navazovat plynule; drobné rozdíly dorovnat rychlostí přehrávání, velké skokem
+    let when = ideal, rate = 1;
+    if (this.next > now) {
+      const drift = ideal - this.next;
+      if (Math.abs(drift) < .045) { when = this.next; rate = 1 - Math.max(-.03, Math.min(.03, drift * 1.5)); }
+    }
+    this.schedule(ab, when, rate);
+  },
+  schedule(ab, when, rate) {
+    const src = this.ctx.createBufferSource();
+    src.buffer = ab; src.playbackRate.value = rate; src.connect(this.gain);
+    src.start(when);
+    this.next = when + ab.duration / rate;
+    this.played++;
+  },
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function lagSec() { return v.buffered.length ? Math.max(0, v.buffered.end(v.buffered.length - 1) - v.currentTime) + .03 : .15; }
+
+function ui() {
+  const b = $('#snd');
+  b.classList.toggle('on', Snd.on && !Snd.reason);
+  b.classList.toggle('live', Snd.on);
+}
+$('#snd').onclick = () => (Snd.on ? Snd.stop() : Snd.start());
+
+// posuvník: výplň od nuly (posun) nebo od začátku (hlasitost) – barvy přes CSS proměnné --a/--b
+function paint(el, fromZero) {
+  const min = +el.min, max = +el.max, val = +el.value, pct = (x) => ((x - min) / (max - min)) * 100;
+  const z = fromZero ? pct(0) : 0, p = pct(val);
+  el.style.setProperty('--a', Math.min(z, p) + '%'); el.style.setProperty('--b', Math.max(z, p) + '%');
+}
+const syncIn = $('#syncIn'), volIn = $('#vol');
+try { Snd.offset = +(localStorage.getItem('qc.audioOffset') || 0); Snd.vol = +(localStorage.getItem('qc.vol') ?? 100); } catch {}
+if (!(Snd.vol >= 0)) Snd.vol = 100;
+syncIn.value = Snd.offset; volIn.value = Snd.vol;
+function showOffset() {
+  $('#syncVal').textContent = Snd.offset === 0 ? 'auto' : (Snd.offset > 0 ? '+' : '−') + Math.abs(Snd.offset) + ' ms';
+  paint(syncIn, true);
+}
+function showVol() { $('#volVal').textContent = Snd.vol + ' %'; paint(volIn, false); }
+showOffset(); showVol();
+syncIn.oninput = () => {
+  Snd.offset = +syncIn.value; showOffset(); Snd.next = 0;
+  try { localStorage.setItem('qc.audioOffset', Snd.offset); } catch {}
+};
+$('#syncReset').onclick = () => { syncIn.value = 0; syncIn.oninput(); };
+volIn.oninput = () => {
+  Snd.vol = +volIn.value; showVol();
+  if (Snd.gain) Snd.gain.gain.setTargetAtTime(Snd.vol / 100, Snd.ctx.currentTime, .02);
+  try { localStorage.setItem('qc.vol', Snd.vol); } catch {}
+};
+
+// menu ⋯
+const setMenu = (on) => { document.body.classList.toggle('menu', on); $('#more').setAttribute('aria-expanded', on); $('#more').classList.toggle('on', on); };
+$('#more').onclick = (e) => { e.stopPropagation(); setMenu(!document.body.classList.contains('menu')); };
+document.addEventListener('pointerdown', (e) => { if (!e.target.closest('#menu, #more')) setMenu(false); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+
+function soundInfo(s) {
+  if (s.audio !== 'ok') { $('#snd').title = s.audio; $('#snd').disabled = !Snd.on; return 'zvuk: ' + s.audio; }
+  $('#snd').disabled = false;
+  if (!Snd.on) return 'zvuk: vypnutý';
+  if (Snd.reason) return 'zvuk: ' + Snd.reason;
+  const lvl = s.audioLevel <= -100 ? 'ticho' : s.audioLevel + ' dB';
+  const d = Snd.lastDelay == null ? '–' : Math.round(Snd.lastDelay * 1000) + ' ms';
+  return `zvuk: ${Snd.mode === 'auto' ? 'synchronizovaný' : 'odhad'} · čeká ${d} · ${lvl}`;
+}
+
+// držíme se co nejblíž živému okraji (nízké zpoždění)
+// Se zvukem: když má výstup (Bluetooth repro) vlastní zpoždění nebo je posun do minusu, zvuk musí hrát
+// dřív než obraz → obraz se o tolik přibrzdí (zvuk nejde pustit dřív, než z Questu dorazí).
+function targetLag() {
+  if (!Snd.on || !Snd.ctx) return .04;
+  const outLat = (Snd.ctx.outputLatency || 0) + (Snd.ctx.baseLatency || 0);
+  return Math.max(.04, outLat - Snd.offset / 1000 + .05);
+}
+setInterval(() => {
+  if (!v.buffered.length) return;
+  const end = v.buffered.end(v.buffered.length - 1), lag = end - v.currentTime, want = targetLag();
+  if (lag > want + .45) v.currentTime = end - want;
+  else v.playbackRate = lag > want + .11 ? 1.08 : lag < want - .03 ? .92 : 1;
+  if (v.paused) v.play().catch(() => {});
+}, 200);
+
+v.addEventListener('playing', () => { if (connecting) setState('jede'); });
+v.addEventListener('timeupdate', () => { if (connecting && v.currentTime > 0 && state !== 'jede') setState('jede'); });
+
+async function poll() {
+  let s = null;
+  try {
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 1800);
+    s = await (await fetch('/stats', { cache: 'no-store', signal: ctl.signal })).json();
+    clearTimeout(t);
+  } catch {}
+  if (!s) {
+    stopStream(); setState('offline', 'Zkouším to každé 2 sekundy.');
+    $('#dot').className = 'dot'; $('#liveText').textContent = 'offline'; $('#info').textContent = 'Quest nedostupný';
+  } else {
+    const [w, h] = s.out.split('x').map(Number);
+    if (w && h && (w !== outW || h !== outH)) { outW = w; outH = h; fit(); }
+    $('#dot').className = 'dot' + (s.running ? ' ok' : '');
+    $('#liveText').textContent = s.running ? `${Math.round(s.fps)} fps · ${lagMs()} ms` : 'pauza';
+    $('#info').innerHTML = s.running
+      ? `obraz: ${s.out} · ${Math.round(s.fps)} fps · ${(s.kbps / 1000).toFixed(1)} Mbit/s<br>zpoždění obrazu: ${lagMs()} ms<br>${soundInfo(s)}`
+      : 'nahrávání v Questu neběží';
+    markQuality(s);
+    if (!s.running) { stopStream(); setState('pauza', 'V Questu otevři rychlé menu Nea → Streamovat → Spustit vysílání.'); }
+    else {
+      if (s.error && state !== 'jede') setState('chyba', s.error);
+      if (!connecting) { setState(state === 'jede' ? 'jede' : 'hleda'); startStream(); }
+      else if (performance.now() - lastFrameAt > 4000) { stopStream(); setState('hleda', 'Obraz se zasekl, připojuji znovu…'); }
+    }
+  }
+  setTimeout(poll, s ? 1000 : 2000);
+}
+function lagMs() { if (!v.buffered.length) return '–'; return Math.round((v.buffered.end(v.buffered.length - 1) - v.currentTime) * 1000); }
+
+/* ---------- ovládání ---------- */
+function fit() {
+  const vw = v.videoWidth || outW, vh = v.videoHeight || outH;
+  const k = Math.min(innerWidth / vw, innerHeight / vh);
+  view.style.width = Math.floor(vw * k) + 'px';
+  view.style.height = Math.floor(vh * k) + 'px';
+}
+addEventListener('resize', fit);
+v.addEventListener('loadedmetadata', fit);
+v.addEventListener('resize', fit);
+
+function markQuality(s) {
+  document.querySelectorAll('[data-q]').forEach((b) => {
+    const q = Object.fromEntries(new URLSearchParams(b.dataset.q));
+    b.classList.toggle('on', +q.side === s.side && +q.fps === s.targetFps && +q.mbps === s.mbps);
+  });
+}
+document.querySelectorAll('[data-q]').forEach((b) => b.onclick = async () => {
+  document.querySelectorAll('[data-q]').forEach((x) => x.classList.toggle('on', x === b));
+  try { await fetch('/set?' + b.dataset.q, { cache: 'no-store' }); } catch {}
+  // nové rozlišení = nový stream od klíčového snímku
+  stopStream();
+  setTimeout(() => startStream(), 400);
+});
+
+$('#fs').onclick = () => {
+  const d = document.documentElement;
+  if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  else (d.requestFullscreen || d.webkitRequestFullscreen)?.call(d);
+};
+document.addEventListener('fullscreenchange', () => setTimeout(fit, 100));
+document.addEventListener('dblclick', (e) => { if (state === 'jede') $('#fs').click(); });
+
+// lišta se schová, když se nehýbe myš
+let calmTimer = 0;
+function wake() { document.body.classList.remove('calm'); clearTimeout(calmTimer); calmTimer = setTimeout(() => document.body.classList.add('calm'), 2500); }
+addEventListener('pointermove', wake, { passive: true }); addEventListener('keydown', wake); wake();
+
+fit();
+if (demo) { setState(demo === 'jede' ? 'hleda' : demo); }
+else { setState('hleda'); poll(); }
+</script>
+</body>
+</html>

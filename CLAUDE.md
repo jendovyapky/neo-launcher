@@ -158,6 +158,33 @@ pravdy (`focused`), žádné callbacky, žádná recyklace.
 5. Hovernutá karta — mimo ořez, může přesahovat panel
 6. Tažená karta
 
+## Streamovat do prohlížeče (od 2026-10-12, balíček `cast/`)
+
+Dlaždice **Streamovat** v rychlém menu otevře `ui/CastSheet` (sklo jako PowerSheet): stav, adresa
+**quest.jendovyapky.eu**, Spustit vysílání / Zastavit, a „Sdílení Questu“ = původní akce (Fotoaparát
+`com.oculus.metacam`, na VrOS < 81 `systemux://sharing`) – `LauncherActivity.openSystemSharing`.
+Když vysílání běží, dlaždice má akcentovou ikonu a název „Vysílá“ (`QuickMenuView.setCastActive`).
+
+- Vše kolem nahrávání běží v **odděleném procesu `:cast`** (`CastStartActivity` – neviditelná, povolení
+  RECORD_AUDIO jednou + systémový dialog nahrávání; `CaptureService` – foreground `mediaProjection`).
+  Pád streamování tak launcher neshodí. `NeoApp.onCreate` v procesu `:cast` nic nenačítá.
+  Hlavní proces se ptá jen přes `cast/Cast`: `isRunning` (getRunningServices) a `fetchStatus`
+  (`http://127.0.0.1:8080/stats`, proto `res/xml/network_security_config.xml` povoluje cleartext jen na localhost).
+- Obraz: MediaProjection → H.264 MediaCodec (60 fps, enkodér kreslí přímo z virtuálního displeje).
+  Android 14: `createVirtualDisplay` jen JEDNOU na projekci, změna kvality = `resize` + `setSurface`.
+  Quest dává **jeden obraz** (ne obě oči), které oko, nejde ovlivnit.
+- Zvuk: `AudioPlaybackCapture` (PCM 48 kHz po 20 ms), jen když někdo na webu poslouchá. Časová razítka
+  obrazu i zvuku jsou ve stejných hodinách → prohlížeč zvuk srovná s obrazem (posun, Bluetooth).
+- `HttpServer` na portu 8080 servíruje `assets/cast/index.html` (přehrávač, jMuxer/MSE, maskot `quba.js`),
+  `/video`, `/audio`, `/stats`, `/set`. `Discovery` se každých 25 s ohlásí na quest.jendovyapky.eu
+  (přes IPv4 i IPv6), web pak najde Quest ve stejné Wi-Fi podle veřejné IP.
+- Web, protokol a maskot jsou v repu **`jendovyapky/quest`** (Cloudflare Worker + `public/`, poznámky
+  v jeho CLAUDE.md). `assets/cast/quba.js` a `index.html` jsou kopie odtamtud – měnit oba.
+  Samostatná appka Quest Cast (`com.jendovyapky.questcast`, `jendovyapky/quest/android`) je tímhle nahrazená;
+  obě naráz nespouštět (port 8080).
+- Neověřeno na headsetu (2026-10-12): okno Streamovat a dlaždice. Samotné streamování (obraz, zvuk,
+  web) Honza otestoval v samostatné appce – „10/10“.
+
 ## Klíčová omezení (naučeno tvrdě)
 
 1. **Žádný blur na jednotlivých kartách.** Snapdragon XR2 Gen 2 to neutáhne
@@ -445,6 +472,10 @@ místo `com.oculus.panelapp.library`) → přepsáno na doplněk jako u LL (viz
   rozmaže prostředí za panelem)
 - Pevný podpisový klíč `keystore/neo-debug.keystore` → nové buildy jdou
   instalovat přes staré (`adb install -r`) bez ztráty nastavení
+- **Repo se 2026-10-12 přesunulo z `lichicks/neo-launcher` pod `jendovyapky/neo-launcher`** (GitHub staré
+  jméno přesměruje, `Updater.FEEDS` má obě). Vývoj je ve větvi `claude/funny-ramanujan-xp8ba6`, **ne v `main`**
+  (`main` = starý fork Lightning Launcheru, needitovat). `build.yml` je na obou větvích stejná cesta → sdílené
+  `run_number`, takže pushe do jiných větví zvyšují číslo verze (nevadí, jen roste).
 
 ## Co otestovat na headsetu jako první
 
