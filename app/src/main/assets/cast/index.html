@@ -58,6 +58,20 @@
   #snd .x { display: none; } #snd:not(.live) .w1, #snd:not(.live) .w2 { display: none; } #snd:not(.live) .x { display: inline; }
   #live { display: inline-flex; align-items: center; gap: 7px; padding: 0 10px 0 6px; font: 12px "Geist Mono", ui-monospace, monospace;
     color: var(--muted); font-variant-numeric: tabular-nums; }
+  #batt { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px 0 4px; font: 12px "Geist Mono", ui-monospace, monospace;
+    color: var(--text); font-variant-numeric: tabular-nums; border-left: 1px solid var(--line); }
+  #batt[hidden] { display: none; }
+  #batt svg { width: 24px; height: 13px; overflow: visible; }
+  #batt .shell { fill: none; stroke: rgba(255,255,255,.55); stroke-width: 1.4; }
+  #batt .cap { fill: rgba(255,255,255,.55); }
+  #batt .lvl { fill: #3ecf8e; transition: width .6s ease, fill .4s; }
+  #batt.mid .lvl { fill: #ff8a1e; }
+  #batt.low .lvl { fill: #ff2fa3; }
+  #batt.low #battPct { color: #ff2fa3; }
+  #batt.low svg { animation: battPulse 1.6s ease-in-out infinite; }
+  @keyframes battPulse { 50% { opacity: .45; } }
+  #batt .bolt { fill: #fff; stroke: #0b0d12; stroke-width: .9; paint-order: stroke; display: none; }
+  #batt.chg .bolt { display: inline; }
   .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); }
   .dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
   @media (max-width: 640px) { #live { display: none; } .lbl { display: none; } }
@@ -107,6 +121,13 @@
 
 <div id="bar">
   <span id="live"><span class="dot" id="dot"></span><span id="liveText">připojuji…</span></span>
+  <span id="batt" hidden title="Baterie Questu">
+    <svg viewBox="0 0 24 13" aria-hidden="true"><rect class="shell" x=".7" y=".7" width="20" height="11.6" rx="3"/>
+      <rect class="cap" x="21.6" y="4.2" width="1.9" height="4.6" rx=".9"/>
+      <rect class="lvl" id="battLvl" x="2.4" y="2.4" width="0" height="8.2" rx="1.6"/>
+      <path class="bolt" d="M11.6 1.6 7.6 7.1h3.1l-1.1 4.3 4.4-5.9h-3.2z"/></svg>
+    <span id="battPct">–</span>
+  </span>
   <div class="seg" id="qSeg">
     <button data-q="side=1280&fps=60&mbps=8">Plynulé</button>
     <button data-q="side=1920&fps=60&mbps=14">Vyvážené</button>
@@ -400,6 +421,7 @@ async function poll() {
     if (w && h && (w !== outW || h !== outH)) { outW = w; outH = h; fit(); }
     $('#dot').className = 'dot' + (s.running ? ' ok' : '');
     $('#liveText').textContent = s.running ? `${Math.round(s.fps)} fps · ${lagMs()} ms` : 'pauza';
+    showBattery(s);
     $('#info').innerHTML = s.running
       ? `obraz: ${s.out} · ${Math.round(s.fps)} fps · ${(s.kbps / 1000).toFixed(1)} Mbit/s<br>zpoždění obrazu: ${lagMs()} ms<br>${soundInfo(s)}`
       : 'nahrávání v Questu neběží';
@@ -412,6 +434,18 @@ async function poll() {
     }
   }
   setTimeout(poll, s ? 1000 : 2000);
+}
+// baterie Questu na liste (z /stats, appka ji cte max 1x za 5 s)
+function showBattery(s) {
+  const b = $('#batt'), pct = s.battery;
+  if (pct == null || pct < 0) { b.hidden = true; return; }
+  b.hidden = false;
+  $('#battPct').textContent = pct + ' %';
+  $('#battLvl').setAttribute('width', (16.6 * Math.max(4, Math.min(100, pct)) / 100).toFixed(2));
+  b.classList.toggle('low', pct <= 20 && !s.charging);
+  b.classList.toggle('mid', pct > 20 && pct <= 50 && !s.charging);
+  b.classList.toggle('chg', !!s.charging);
+  b.title = 'Baterie Questu: ' + pct + ' %' + (s.charging ? ' · nabíjí se' : '');
 }
 function lagMs() { if (!v.buffered.length) return '–'; return Math.round((v.buffered.end(v.buffered.length - 1) - v.currentTime) * 1000); }
 

@@ -208,19 +208,44 @@ class HttpServer extends Thread {
 
     private static int clamp(int v, int lo, int hi) { return Math.max(lo, Math.min(hi, v)); }
 
+    /** [procenta (-1 = nezname), nabiji 0/1] - z "sticky" broadcastu, cte se max 1x za 5 s. */
+    private static final int[] battery = {-1, 0};
+    private static long batteryAt;
+
+    private static void readBattery() {
+        long now = SystemClock.elapsedRealtime();
+        if (now - batteryAt < 5000) return;
+        batteryAt = now;
+        CaptureService svc = CaptureService.instance;
+        if (svc == null) return;
+        try {
+            android.content.Intent b = svc.registerReceiver(null,
+                    new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED));
+            if (b == null) return;
+            int level = b.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1);
+            int scale = b.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, 100);
+            int status = b.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1);
+            battery[0] = level < 0 || scale <= 0 ? -1 : Math.round(level * 100f / scale);
+            battery[1] = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING
+                    || status == android.os.BatteryManager.BATTERY_STATUS_FULL ? 1 : 0;
+        } catch (Exception ignored) {}
+    }
+
     static String stats() {
+        readBattery();
         long up = CaptureService.running ? (SystemClock.elapsedRealtime() - CaptureService.startedAt) / 1000 : 0;
         String err = CaptureService.lastError == null ? "null"
                 : "\"" + CaptureService.lastError.replace("\\", "\\\\").replace("\"", "'").replace("\n", " ") + "\"";
         return String.format(Locale.US,
                 "{\"running\":%b,\"src\":\"%dx%d\",\"out\":\"%dx%d\",\"fps\":%.1f,\"kbps\":%d,"
                         + "\"side\":%d,\"targetFps\":%d,\"mbps\":%d,\"viewers\":%d,\"uptime\":%d,\"error\":%s,"
-                        + "\"audio\":%s,\"audioLevel\":%d,\"listeners\":%d}",
+                        + "\"audio\":%s,\"audioLevel\":%d,\"listeners\":%d,"
+                        + "\"battery\":%d,\"charging\":%b}",
                 CaptureService.running, CaptureService.srcWidth, CaptureService.srcHeight,
                 CaptureService.outWidth, CaptureService.outHeight, CaptureService.outFps, CaptureService.kbps,
                 CaptureService.maxSide, CaptureService.targetFps, CaptureService.bitrateMbps,
                 Hub.count(), up, err,
                 AudioCapture.unavailableReason() == null ? "\"ok\"" : "\"" + AudioCapture.unavailableReason() + "\"",
-                AudioCapture.levelDb, AudioCapture.count());
+                AudioCapture.levelDb, AudioCapture.count(), battery[0], battery[1] == 1);
     }
 }

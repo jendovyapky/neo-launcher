@@ -1,3 +1,6 @@
+# Baterie Questu na počítači
+• Když streamuješ do prohlížeče, na liště dole je teď baterka Questu s procenty – zelená, pod 50 % oranžová, pod 20 % růžová a bliká. Při nabíjení má blesk
+
 # Streamování do prohlížeče
 • Dlaždice Streamovat v rychlém menu otevře nové okno: dej Spustit vysílání a na počítači ve stejné Wi-Fi otevři quest.jendovyapky.eu – Quest se tam najde sám a obraz jede v prohlížeči, plynule a i se zvukem
 • Zvuk je na počítači na začátku vypnutý, ať hru ve stejné místnosti neslyšíte dvakrát. Zapneš ho tlačítkem Zvuk – sám se srovná s obrazem a pod třemi tečkami doladíš hlasitost a posun (třeba pro bezdrátový reproduktor)
