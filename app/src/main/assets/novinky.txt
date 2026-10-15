@@ -1,3 +1,8 @@
+# Baterka Questu připnutá v rohu
+• Na liště streamu v prohlížeči je vpravo špendlík. Když ho zapneš, při sledování zůstane v pravém dolním rohu obrazu malá pilulka s baterkou Questu – zbytek lišty se schová jako dřív. Pohneš myší a je tam celá lišta
+• Prohlížeč si připnutí pamatuje
+• Baterka na liště je hezčí a líp zarovnaná
+
 # Baterie Questu na počítači
 • Když streamuješ do prohlížeče, na liště dole je teď baterka Questu s procenty – zelená, pod 50 % oranžová, pod 20 % růžová a bliká. Při nabíjení má blesk
 

@@ -178,6 +178,9 @@ Když vysílání běží, dlaždice má akcentovou ikonu a název „Vysílá�
 - `HttpServer` na portu 8080 servíruje `assets/cast/index.html` (přehrávač, jMuxer/MSE, maskot `quba.js`),
   `/video`, `/audio`, `/stats`, `/set`. `Discovery` se každých 25 s ohlásí na quest.jendovyapky.eu
   (přes IPv4 i IPv6), web pak najde Quest ve stejné Wi-Fi podle veřejné IP.
+- Lišta streamu: baterka Questu (`/stats` → `battery`, `charging`; appka čte max 1× za 5 s) a **špendlík** vpravo
+  (localStorage `qc.pin`): připnuto + myš v klidu → lišta zmizí, v rohu obrazu zůstane pilulka `#chip` s baterkou
+  (16 px od pravého i spodního kraje obrazu, `placeChip()`). Honza chce souměrné okraje – měřit, ne od oka.
 - Web, protokol a maskot jsou v repu **`jendovyapky/quest`** (Cloudflare Worker + `public/`, poznámky
   v jeho CLAUDE.md). `assets/cast/quba.js` a `index.html` jsou kopie odtamtud – měnit oba.
   Samostatná appka Quest Cast (`com.jendovyapky.questcast`, `jendovyapky/quest/android`) je tímhle nahrazená;
