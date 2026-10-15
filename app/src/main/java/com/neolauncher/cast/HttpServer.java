@@ -151,15 +151,18 @@ class HttpServer extends Thread {
         s.setSendBufferSize(256 * 1024);
         streamHeaders(out);
         Hub.Viewer v = Hub.join();
+        StallGuard.Entry guard = StallGuard.watch(s);
         byte[] header = new byte[16];
         try {
             while (CaptureService.running && !v.closed) {
                 Hub.Frame f = v.next();
                 if (f == null) continue;
                 writePacket(out, header, 1, f.data, f.durationMs, f.key, f.ptsUs);
+                guard.ok();
             }
         } catch (InterruptedException ignored) {
         } finally {
+            StallGuard.done(guard);
             Hub.leave(v);
         }
     }
@@ -173,15 +176,18 @@ class HttpServer extends Thread {
         }
         streamHeaders(out);
         AudioCapture.Listener l = AudioCapture.join();
+        StallGuard.Entry guard = StallGuard.watch(s);
         byte[] header = new byte[16];
         try {
             while (CaptureService.running && !l.closed) {
                 AudioCapture.Chunk c = l.next();
                 if (c == null) continue;
                 writePacket(out, header, 2, c.pcm, AudioCapture.CHUNK_MS, false, c.ptsUs);
+                guard.ok();
             }
         } catch (InterruptedException ignored) {
         } finally {
+            StallGuard.done(guard);
             AudioCapture.leave(l);
         }
     }

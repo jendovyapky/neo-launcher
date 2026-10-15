@@ -1,3 +1,6 @@
+# Oprava počtu diváků
+• Okno Streamovat ukazovalo nesmyslně moc diváků (třeba 25). Počítala se i spojení, která už dávno skončila – třeba když počítač usnul nebo vypadla Wi-Fi. Teď Quest takové mrtvé spojení do pár vteřin pozná a zavře, takže počet sedí a zbytečně se neplýtvá výkonem
+
 # Baterka Questu připnutá v rohu
 • Na liště streamu v prohlížeči je vpravo špendlík. Když ho zapneš, při sledování zůstane v pravém dolním rohu obrazu malá pilulka s baterkou Questu – zbytek lišty se schová jako dřív. Pohneš myší a je tam celá lišta
 • Prohlížeč si připnutí pamatuje

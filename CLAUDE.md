@@ -181,6 +181,9 @@ Když vysílání běží, dlaždice má akcentovou ikonu a název „Vysílá�
 - Lišta streamu: baterka Questu (`/stats` → `battery`, `charging`; appka čte max 1× za 5 s) a **špendlík** vpravo
   (localStorage `qc.pin`): připnuto + myš v klidu → lišta zmizí, v rohu obrazu zůstane pilulka `#chip` s baterkou
   (16 px od pravého i spodního kraje obrazu, `placeChip()`). Honza chce souměrné okraje – měřit, ne od oka.
+- `StallGuard`: každé spojení `/video` a `/audio` hlídá; když se do něj 6 s nepodaří nic zapsat (počítač usnul,
+  vypadla Wi-Fi), zavře socket → zaseknutý zápis spadne a divák se odečte. Dřív visela mrtvá spojení desítky minut
+  a okno Streamovat ukazovalo třeba 25 diváků (2026-10-15).
 - Web, protokol a maskot jsou v repu **`jendovyapky/quest`** (Cloudflare Worker + `public/`, poznámky
   v jeho CLAUDE.md). `assets/cast/quba.js` a `index.html` jsou kopie odtamtud – měnit oba.
   Samostatná appka Quest Cast (`com.jendovyapky.questcast`, `jendovyapky/quest/android`) je tímhle nahrazená;
