@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Neo – Meta tlačítko</string>
+    <string name="service_name">Neo – Meta tlačítko</string>
+    <string name="service_desc">Když zmáčkneš Meta tlačítko, otevře se Neo. Když už je Neo otevřené, další zmáčknutí ukáže menu Questu. Ve hře zůstává menu Questu (Pokračovat / Ukončit). Upozorní i na slabou baterii a umí z Nea uspat, vypnout a restartovat Quest. Neo nic neukládá ani neodesílá – jen pozná, kdy se otevřelo menu Questu a jaká aplikace je v popředí.</string>
+</resources>

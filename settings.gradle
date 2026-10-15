@@ -1,0 +1,4 @@
+rootProject.name = 'NeoLauncher'
+include ':app'
+// Doplnek "Neo - Meta tlacitko" (sluzba pristupnosti, Neo ho pribali a nainstaluje).
+include ':metaaddon'

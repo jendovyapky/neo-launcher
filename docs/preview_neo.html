@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neo Launcher - PC Náhled (3D Hloubka & Světlá Skleněná Lišta)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  
+  /* Quest 3S Passthrough / VR Living Room ambient background */
+  body {
+    background: radial-gradient(circle at 50% 35%, #1d2538 0%, #0d111a 60%, #05070a 100%);
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at center, rgba(56, 189, 248, 0.08) 0%, transparent 70%),
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 60px 60px, 60px 60px;
+    background-position: center center;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .room-ambient {
+    position: absolute;
+    width: 100%;
+    max-width: 1300px;
+    height: 700px;
+    pointer-events: none;
+    z-index: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    opacity: 0.35;
+  }
+  .room-furniture {
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 24px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Glass Launcher Device Window - UNCLIPPED so hovered cards pop out beyond borders */
+  .device-frame {
+    width: 1060px;
+    height: 600px;
+    background: rgba(16, 21, 31, 0.42);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1.5px solid rgba(255, 255, 255, 0.16);
+    border-radius: 28px;
+    box-shadow: 
+      0 30px 80px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 0 40px rgba(56, 189, 248, 0.10);
+    position: relative;
+    z-index: 10;
+    overflow: visible !important; /* Allows hovered cards to freely pop out in 3D beyond frame */
+  }
+
+  /* Luminous Frosted Glass Top Bar - above scrolling cards (1), but UNDER hovered card (99999) */
+  .top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    /* Lighter frosted glass + stronger blur */
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.24);
+    box-shadow: 
+      0 10px 30px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    border-top-left-radius: 26px;
+    border-top-right-radius: 26px;
+    z-index: 1000; /* Above scrolling cards (z-index 1), but under active hovered card (z-index 99999) */
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+  .launcher-brand { display: flex; align-items: center; gap: 12px; }
+  .launcher-icon {
+    width: 32px; height: 32px; background: #000000; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+  .launcher-icon .dot { width: 14px; height: 14px; background: #ffffff; border-radius: 50%; }
+  .launcher-name { font-size: 19px; font-weight: 700; letter-spacing: 0.5px; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+
+  /* Status widget */
+  .status-widget {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.95);
+    padding: 6px 16px;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(16px);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+  .clock {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+  }
+  .clock .spacer {
+    display: inline-block;
+    width: 20px;
+  }
+  
+  /* Battery widget */
+  .battery-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .battery-pill:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .percent-val {
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* Pure White smaller vector lightning bolts */
+  .bolt-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5px;
+    margin-left: 2px;
+  }
+  .bolt-svg {
+    width: 8.5px;
+    height: 12px;
+    fill: #ffffff !important;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
+  }
+
+  /* Battery level colors */
+  .battery-green { color: #22c55e; border-color: rgba(34, 197, 94, 0.4); }
+  .battery-blue  { color: #3b82f6; border-color: rgba(59, 130, 246, 0.4); }
+  .battery-orange{ color: #f97316; border-color: rgba(249, 115, 22, 0.4); }
+  .battery-red   { color: #ef4444; border-color: rgba(239, 68, 68, 0.4); }
+
+  /* Apps Scroll Wrapper with overflow visible so hovered cards pop out completely in 3D */
+  .apps-scroll-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 76px 24px 24px 24px;
+    box-sizing: border-box;
+    overflow: visible !important; /* Allows hovered cards to freely pop out beyond borders */
+    border-radius: 28px;
+  }
+
+  /* Apps Grid - tighter gap (15px) */
+  .apps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 15px;
+    perspective: 1100px;
+    position: relative;
+    overflow: visible !important;
+    will-change: transform;
+    transform-origin: center top;
+  }
+
+  /* App Card - unclipped, pops out into 3D space */
+  .app-card {
+    position: relative;
+    height: 152px;
+    border-radius: 16px;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transform-origin: center center;
+    z-index: 1;
+    will-change: transform, filter, opacity;
+    backface-visibility: hidden;
+    /* Slow-motion cinematic transition */
+    transition: 
+      transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.38s ease,
+      filter 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.35s ease;
+  }
+
+  /* Cover artwork */
+  .card-artwork {
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    transition: border-color 0.35s ease, box-shadow 0.35s ease;
+  }
+  .card-artwork::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 44px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+    pointer-events: none;
+  }
+
+  /* Floating pill for title - 100% razor-sharp, zero blur */
+  .title-pill {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10, 14, 22, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+    padding: 3px 12px;
+    max-width: 86%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    filter: none !important;
+    -webkit-filter: none !important;
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: subpixel-antialiased;
+    transition: 
+      background 0.3s ease,
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  /* Hover state: POP-OUT outside window + ABOVE top-bar + 100% CRYSTAL SHARP */
+  .app-card.is-hovered {
+    z-index: 99999 !important; /* Above top-bar (1000) and other cards (1) */
+    filter: none !important;
+    -webkit-filter: none !important;
+    opacity: 1 !important;
+  }
+  .app-card.is-hovered .card-artwork {
+    border-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 
+      0 26px 55px rgba(0, 0, 0, 0.85),
+      0 0 32px rgba(255, 255, 255, 0.30);
+  }
+  /* Enlarge title pill smoothly */
+  .app-card.is-hovered .title-pill {
+    transform: translateX(-50%);
+    background: rgba(6, 9, 15, 0.96);
+    border-color: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.85);
+    filter: none !important;
+    -webkit-filter: none !important;
+    color: #ffffff !important;
+  }
+
+  /* Half-visible 3rd row peeking from bottom */
+  .app-card.row-peek {
+    opacity: 0.9;
+  }
+
+  /* Door peephole zoom overlay on launch */
+  .peephole-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 6, 10, 0.96);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    z-index: 100000;
+    text-align: center;
+    padding: 24px;
+    border-radius: 28px;
+  }
+  .peephole-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  .peephole-circle {
+    width: 140px; height: 140px; border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 60px rgba(56, 189, 248, 0.6), inset 0 0 35px rgba(0, 0, 0, 0.8);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    background-size: cover;
+    background-position: center;
+    animation: peepholeExpand 0.65s cubic-bezier(0.12, 0.8, 0.2, 1) forwards;
+  }
+  @keyframes peepholeExpand {
+    0% { transform: scale(0.6); opacity: 0.3; }
+    50% { transform: scale(1.15); opacity: 0.95; }
+    100% { transform: scale(1.0); opacity: 1; }
+  }
+  .peephole-title { font-size: 23px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+  .peephole-desc { font-size: 15px; color: #38bdf8; max-width: 520px; line-height: 1.4; margin-bottom: 16px; }
+  .peephole-hint { font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+
+  /* Info / instructions panel below preview */
+  .instructions {
+    margin-top: 18px;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 13px;
+    text-align: center;
+    max-width: 980px;
+    line-height: 1.6;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px 24px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 10;
+  }
+  .instructions span { color: #38bdf8; font-weight: 600; }
+  .instructions .badge-tip {
+    display: inline-block;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    padding: 1px 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    margin: 0 4px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+</style>
+</head>
+<body>
+
+<div class="room-ambient">
+  <div class="room-furniture">[ VR Boundary Room Grid ]</div>
+  <div class="room-furniture">[ Quest 3S Passthrough Area ]</div>
+</div>
+
+<div class="device-frame" id="deviceFrame">
+  <!-- Luminous Frosted Glass Top Bar -->
+  <div class="top-bar" id="topBar">
+    <div class="launcher-brand">
+      <div class="launcher-icon"><div class="dot"></div></div>
+      <div class="launcher-name">Neo</div>
+    </div>
+    
+    <div class="status-widget">
+      <div class="clock" id="liveClock">01:35<span class="spacer"></span>19. 9.</div>
+      <div class="battery-pill battery-green" id="batteryBtn" title="Klikněte pro přepínání stavů nabíjení!">
+        <span id="batteryPercent" class="percent-val">92%</span>
+        <div class="bolt-container" id="boltContainer">
+          <svg class="bolt-svg" viewBox="0 0 24 24"><path d="M11 2L4 13h5l-1.5 9L18 11h-5.5L14 2Z"/></svg>
+          <svg class="bolt-svg" viewBox="0 0 24 24"><path d="M11 2L4 13h5l-1.5 9L18 11h-5.5L14 2Z"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apps Grid Area -->
+  <div class="apps-scroll-wrapper" id="scrollWrapper">
+    <div class="apps-grid" id="appsGrid">
+      <!-- Row 1 -->
+      <div class="app-card" data-name="Beat Saber">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #e11d48, #9f1239);"></div>
+        <div class="title-pill">Beat Saber</div>
+      </div>
+      <div class="app-card" data-name="Superhot VR">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #0284c7, #075985);"></div>
+        <div class="title-pill">Superhot VR</div>
+      </div>
+      <div class="app-card" data-name="Walkabout Mini Golf">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #7c3aed, #5b21b6);"></div>
+        <div class="title-pill">Walkabout Mini Golf</div>
+      </div>
+      <div class="app-card" data-name="The Walking Dead: Saints & Sinners">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #10b981, #065f46);"></div>
+        <div class="title-pill">The Walking Dead: S&amp;S</div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="app-card" data-name="Eleven Table Tennis">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #f59e0b, #b45309);"></div>
+        <div class="title-pill">Eleven Table Tennis</div>
+      </div>
+      <div class="app-card" data-name="Pistol Whip">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #6366f1, #4338ca);"></div>
+        <div class="title-pill">Pistol Whip</div>
+      </div>
+      <div class="app-card" data-name="Synth Riders">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #ec4899, #be185d);"></div>
+        <div class="title-pill">Synth Riders</div>
+      </div>
+      <div class="app-card" data-name="Shortcuts Navigator">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #14b8a6, #115e59);"></div>
+        <div class="title-pill">Shortcuts Navigator</div>
+      </div>
+
+      <!-- Row 3 (half row visible from bottom, peeking) -->
+      <div class="app-card row-peek" data-name="Resident Evil 4 VR">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #881337, #4c0519);"></div>
+        <div class="title-pill">Resident Evil 4 VR</div>
+      </div>
+      <div class="app-card row-peek" data-name="Moss: Book II">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #065f46, #022c22);"></div>
+        <div class="title-pill">Moss: Book II</div>
+      </div>
+      <div class="app-card row-peek" data-name="Red Matter 2">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #ea580c, #7c2d12);"></div>
+        <div class="title-pill">Red Matter 2</div>
+      </div>
+      <div class="app-card row-peek" data-name="Virtual Desktop">
+        <div class="card-artwork" style="background: linear-gradient(135deg, #4f46e5, #312e81);"></div>
+        <div class="title-pill">Virtual Desktop</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Peephole launch overlay -->
+  <div class="peephole-overlay" id="peepholeOverlay">
+    <div class="peephole-circle" id="peepholeCircle"></div>
+    <div class="peephole-title" id="peepholeTitle">Beat Saber</div>
+    <div class="peephole-desc">Hra spuštěna plynulým zoomem do kukátka a Neo Launcher se automaticky vypnul!</div>
+    <div class="peephole-hint">Klikněte kamkoliv pro návrat do Neo Launcheru</div>
+  </div>
+</div>
+
+<div class="instructions">
+  <div>✨ <b>Vylepšení 3D hloubky, dynamického vrstvení a ohraničení:</b></div>
+  • <span>Karta pod kurzorem pop-out NAD lištu</span>: Vybraná karta se zvětší (1.18×), nakloní a vystoupí <b>nad horní lištu</b> i přes okraje okna bez jakéhokoliv ořezání.<br>
+  • <span>Rolování pod lištou a ohraničení oknem</span>: Při rolování projíždějí ostatní ikonky <b>pod skleněnou lištou</b> (blur 32px) a na horním i spodním okraji okna čistě mizí, aniž by vyjely do prostoru.<br>
+  • <span>Krystalicky ostrý název</span>: Text vybrané hry je 100% ostrý a nezkreslený.<br>
+  • <span>Stabilní gumové rolování</span>: Žádné překrývání, karty jsou pevně uzamčeny ve svých sloupcích a řádcích.
+</div>
+
+<script>
+  const deviceFrame = document.getElementById('deviceFrame');
+  const scrollWrapper = document.getElementById('scrollWrapper');
+  const appsGrid = document.getElementById('appsGrid');
+  const topBar = document.getElementById('topBar');
+  const cards = Array.from(document.querySelectorAll('.app-card'));
+  const peepholeOverlay = document.getElementById('peepholeOverlay');
+  const peepholeCircle = document.getElementById('peepholeCircle');
+  const peepholeTitle = document.getElementById('peepholeTitle');
+  const batteryBtn = document.getElementById('batteryBtn');
+  const boltContainer = document.getElementById('boltContainer');
+  const batteryPercent = document.getElementById('batteryPercent');
+
+  let activeCard = null;
+  let lastMouseX = -1;
+  let lastMouseY = -1;
+
+  // Track global mouse position for accurate hover recalculations during smooth scrolling
+  window.addEventListener('mousemove', (e) => {
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+  });
+
+  // Radial 3D depth-of-field blur: hovered card is 100% crisp, surrounds have photographic bokeh
+  function applyRadialBlur(cardToFocus) {
+    if (!cardToFocus) {
+      clearRadialBlur();
+      return;
+    }
+    const activeRect = cardToFocus.getBoundingClientRect();
+    const ax = activeRect.left + activeRect.width / 2;
+    const ay = activeRect.top + activeRect.height / 2;
+    const maxDist = 850;
+
+    cards.forEach(card => {
+      if (card === cardToFocus) {
+        // Active card: 100% crystal sharp, zero blur on card or title!
+        card.style.filter = 'none';
+        card.style.webkitFilter = 'none';
+        card.style.opacity = '1';
+        const pill = card.querySelector('.title-pill');
+        if (pill) {
+          pill.style.filter = 'none';
+          pill.style.webkitFilter = 'none';
+        }
+        return;
+      }
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dist = Math.hypot(cx - ax, cy - ay);
+      const t = Math.min(1, Math.max(0, dist / maxDist));
+
+      // Surrounding cards: subtle 1.1px blur immediately around active card, up to 2.2px in distance
+      const blurPx = (1.1 + t * 1.1).toFixed(1);
+      const alpha = (0.98 - t * 0.03).toFixed(2);
+      card.style.filter = `blur(${blurPx}px)`;
+      card.style.webkitFilter = `blur(${blurPx}px)`;
+      if (card.style.visibility !== 'hidden' && (card.style.clipPath === 'none' || !card.style.clipPath)) {
+        card.style.opacity = alpha;
+      }
+    });
+
+    topBar.style.filter = 'none';
+    topBar.style.webkitFilter = 'none';
+    topBar.style.opacity = '1';
+  }
+
+  function clearRadialBlur() {
+    cards.forEach(card => {
+      card.style.filter = 'none';
+      card.style.webkitFilter = 'none';
+      if (card.style.visibility !== 'hidden' && (card.style.clipPath === 'none' || !card.style.clipPath)) {
+        card.style.opacity = '1';
+      }
+      const pill = card.querySelector('.title-pill');
+      if (pill) {
+        pill.style.filter = 'none';
+        pill.style.webkitFilter = 'none';
+      }
+    });
+    topBar.style.filter = 'none';
+    topBar.style.webkitFilter = 'none';
+    topBar.style.opacity = '1';
+  }
+
+  // Dynamic window boundary clipping:
+  // Non-hovered cards scrolling behind the top-bar remain clearly visible through the frosted glass,
+  // while only the portion that crosses the top or bottom window boundary is trimmed cleanly
+  // following the exact 26px rounded corner radius of the launcher window.
+  // The active hovered card is 100% UNCLIPPED, popping out in full 3D above the top bar!
+  function updateWindowClipping() {
+    const frameRect = deviceFrame.getBoundingClientRect();
+    const topBound = frameRect.top;
+    const bottomBound = frameRect.bottom;
+
+    cards.forEach(card => {
+      // Hovered card is ALWAYS unclipped, full 3D pop-out above top bar and window edges!
+      if (card === activeCard) {
+        card.style.clipPath = 'none';
+        card.style.webkitClipPath = 'none';
+        card.style.visibility = 'visible';
+        card.style.opacity = '1';
+        return;
+      }
+
+      const rect = card.getBoundingClientRect();
+      const topOverlap = topBound - rect.top;
+      const btmOverlap = rect.bottom - bottomBound;
+
+      if (rect.bottom <= topBound + 2 || rect.top >= bottomBound - 2) {
+        // Completely scrolled out of the window frame: hide
+        card.style.visibility = 'hidden';
+        card.style.opacity = '0';
+        card.style.clipPath = 'none';
+        card.style.webkitClipPath = 'none';
+      } else if (topOverlap > 0) {
+        // Upper portion extends past top border: clip cleanly following top rounded corners!
+        const topPct = Math.min(100, Math.max(0, ((topOverlap + 1.2) / rect.height) * 100)).toFixed(2);
+        const clip = `inset(${topPct}% 0% 0% 0% round 26px 26px 0 0)`;
+        card.style.clipPath = clip;
+        card.style.webkitClipPath = clip;
+        card.style.visibility = 'visible';
+        // Keep the card fully visible and moving behind the frosted glass
+        card.style.opacity = '0.96';
+      } else if (btmOverlap > 0) {
+        // Lower portion extends past bottom border: clip cleanly following bottom rounded corners!
+        const btmPct = Math.min(100, Math.max(0, ((btmOverlap + 1.2) / rect.height) * 100)).toFixed(2);
+        const clip = `inset(0% 0% ${btmPct}% 0% round 0 0 26px 26px)`;
+        card.style.clipPath = clip;
+        card.style.webkitClipPath = clip;
+        card.style.visibility = 'visible';
+        card.style.opacity = '0.96';
+      } else {
+        // Completely inside window bounds
+        card.style.clipPath = 'none';
+        card.style.webkitClipPath = 'none';
+        card.style.visibility = 'visible';
+        if (card.style.opacity === '0') {
+          card.style.opacity = '1';
+        }
+      }
+    });
+  }
+
+  function setHoveredCard(card, hovered, clientX, clientY) {
+    if (hovered && card) {
+      if (activeCard && activeCard !== card) {
+        activeCard.classList.remove('is-hovered');
+        activeCard.style.transform = 'perspective(900px) scale(1) translateZ(0px) rotateX(0deg) rotateY(0deg)';
+      }
+      activeCard = card;
+      card.classList.add('is-hovered');
+
+      if (clientX !== undefined && clientY !== undefined) {
+        const rect = card.getBoundingClientRect();
+        const x = clientX - rect.left - rect.width / 2;
+        const y = clientY - rect.top - rect.height / 2;
+        const rotY = ((x / (rect.width / 2)) * 6.0).toFixed(2);
+        const rotX = ((-y / (rect.height / 2)) * 6.0).toFixed(2);
+        card.style.transform = `perspective(900px) scale(1.18) translateZ(32px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      } else {
+        card.style.transform = `perspective(900px) scale(1.18) translateZ(32px) rotateX(0deg) rotateY(0deg)`;
+      }
+      updateWindowClipping();
+      applyRadialBlur(card);
+    } else {
+      if (activeCard) {
+        activeCard.classList.remove('is-hovered');
+        activeCard.style.transform = 'perspective(900px) scale(1) translateZ(0px) rotateX(0deg) rotateY(0deg)';
+        activeCard = null;
+      }
+      updateWindowClipping();
+      clearRadialBlur();
+    }
+  }
+
+  cards.forEach(card => {
+    // 3D tilt tracking cursor
+    card.addEventListener('mousemove', (e) => {
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      setHoveredCard(card, true, e.clientX, e.clientY);
+    });
+
+    card.addEventListener('mouseenter', (e) => {
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      setHoveredCard(card, true, e.clientX, e.clientY);
+    });
+
+    card.addEventListener('mouseleave', () => {
+      if (activeCard === card) {
+        setHoveredCard(null, false);
+      }
+    });
+
+    card.addEventListener('click', () => {
+      const name = card.getAttribute('data-name');
+      const bg = card.querySelector('.card-artwork').style.background;
+      peepholeTitle.textContent = name;
+      peepholeCircle.style.background = bg;
+      peepholeOverlay.classList.add('active');
+    });
+  });
+
+  peepholeOverlay.addEventListener('click', () => {
+    peepholeOverlay.classList.remove('active');
+  });
+
+  // Dynamic Liquid Jelly / Rubber-band Scrolling:
+  // Scroll translateY belongs strictly to appsGrid container so cards NEVER detach or overlap!
+  let currentScrollY = 0;
+  let targetScrollY = 0;
+  let scrollVelocity = 0;
+  let physicsAnimId = null;
+
+  const minScroll = -135;
+  const maxScroll = 0;
+
+  function updateCardUnderCursor() {
+    if (lastMouseX < 0 || lastMouseY < 0) return;
+    const el = document.elementFromPoint(lastMouseX, lastMouseY);
+    const card = el ? el.closest('.app-card') : null;
+
+    if (card) {
+      setHoveredCard(card, true, lastMouseX, lastMouseY);
+    } else if (activeCard) {
+      setHoveredCard(null, false);
+    }
+  }
+
+  function updatePhysics() {
+    // Elastic boundary pull (spring back if dragged past bounds)
+    if (targetScrollY > maxScroll) {
+      targetScrollY += (maxScroll - targetScrollY) * 0.16;
+    } else if (targetScrollY < minScroll) {
+      targetScrollY += (minScroll - targetScrollY) * 0.16;
+    }
+
+    // Smooth momentum LERP
+    const prevY = currentScrollY;
+    currentScrollY += (targetScrollY - currentScrollY) * 0.16;
+    scrollVelocity = currentScrollY - prevY;
+
+    // Organic rubber-band jelly squish proportional to velocity
+    const squish = 1.0 - Math.min(0.045, Math.abs(scrollVelocity) * 0.0028);
+
+    // Apply translation solely to the grid container
+    appsGrid.style.transformOrigin = scrollVelocity < 0 ? 'center top' : 'center bottom';
+    appsGrid.style.transform = `perspective(1100px) translateY(${currentScrollY.toFixed(2)}px) scaleY(${squish.toFixed(3)})`;
+
+    // Dynamic boundary clipping on scrolling cards
+    updateWindowClipping();
+
+    // Continuously update active card under cursor while scrolling
+    updateCardUnderCursor();
+
+    const dist = Math.abs(targetScrollY - currentScrollY);
+    const vel = Math.abs(scrollVelocity);
+
+    if (dist > 0.08 || vel > 0.08) {
+      physicsAnimId = requestAnimationFrame(updatePhysics);
+    } else {
+      currentScrollY = targetScrollY = Math.max(minScroll, Math.min(maxScroll, currentScrollY));
+      appsGrid.style.transform = `perspective(1100px) translateY(${currentScrollY.toFixed(2)}px) scaleY(1)`;
+      physicsAnimId = null;
+      updateWindowClipping();
+      updateCardUnderCursor();
+    }
+  }
+
+  function startPhysics() {
+    if (!physicsAnimId) {
+      physicsAnimId = requestAnimationFrame(updatePhysics);
+    }
+  }
+
+  // Initial clipping setup on page load
+  window.addEventListener('load', updateWindowClipping);
+  updateWindowClipping();
+
+  window.addEventListener('wheel', (e) => {
+    const rect = deviceFrame.getBoundingClientRect();
+    if (e.clientX >= rect.left && e.clientX <= rect.right &&
+        e.clientY >= rect.top && e.clientY <= rect.bottom) {
+      e.preventDefault();
+
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+
+      // Wheel impulse with natural dampening
+      targetScrollY -= e.deltaY * 0.65;
+
+      // Soft rubber-band resistance when overscrolling past limits
+      if (targetScrollY > maxScroll) {
+        targetScrollY = maxScroll + (targetScrollY - maxScroll) * 0.38;
+      } else if (targetScrollY < minScroll) {
+        targetScrollY = minScroll + (targetScrollY - minScroll) * 0.38;
+      }
+
+      startPhysics();
+    }
+  }, { passive: false });
+
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const dateStr = `${now.getDate()}. ${now.getMonth()+1}.`;
+    document.getElementById('liveClock').innerHTML = `${timeStr}<span class="spacer"></span>${dateStr}`;
+  }
+  updateClock(); setInterval(updateClock, 1000);
+
+  // Battery Testing Cycles
+  const singleBoltSvg = `<svg class="bolt-svg" viewBox="0 0 24 24"><path d="M11 2L4 13h5l-1.5 9L18 11h-5.5L14 2Z"/></svg>`;
+  const dualBoltSvg = `${singleBoltSvg}${singleBoltSvg}`;
+
+  const batteryStates = [
+    { level: 92, svg: dualBoltSvg, class: 'battery-green', tip: 'Rychlé nabíjení (>80%, zelená + 2 bílé blesky vpravo)' },
+    { level: 68, svg: singleBoltSvg, class: 'battery-blue',  tip: 'Běžné nabíjení (51-80%, modrá + 1 bílý blesk vpravo)' },
+    { level: 42, svg: '',            class: 'battery-orange',tip: 'Baterie (21-50%, oranžová, bez blesku)' },
+    { level: 15, svg: '',            class: 'battery-red',   tip: 'Nízká baterie (0-20%, červená, bez blesku)' }
+  ];
+  let currentBatteryIdx = 0;
+
+  batteryBtn.addEventListener('click', () => {
+    currentBatteryIdx = (currentBatteryIdx + 1) % batteryStates.length;
+    const st = batteryStates[currentBatteryIdx];
+    batteryPercent.textContent = `${st.level}%`;
+    boltContainer.innerHTML = st.svg;
+    batteryBtn.className = `battery-pill ${st.class}`;
+    batteryBtn.title = st.tip;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+// Doplnek "Neo - Meta tlacitko": samostatna mala aplikace jen se sluzbou
+// pristupnosti (jako RedirectServices u Lightning Launcheru). Neo ji ma
+// pribalenou v assets a instaluje ji samo pres PackageInstaller - takto
+// nainstalovanou aplikaci Android nebere jako rucne nainstalovanou, takze ji
+// jde zapnout v Pristupnosti bez "Omezeneho nastaveni".
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'com.neolauncher.meta'
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId 'com.neolauncher.meta'
+        minSdkVersion 31
+        targetSdkVersion 34
+        // Verze doplnku - zvysit pri kazde zmene kodu doplnku. Neo porovna
+        // pribalenou verzi s nainstalovanou a nabidne aktualizaci.
+        versionCode 3
+        versionName "1.2"
+    }
+
+    signingConfigs {
+        // Stejny klic jako Neo (spolecne podpisove opravneni pro prikazy z Nea).
+        neo {
+            storeFile rootProject.file('keystore/neo-debug.keystore')
+            storePassword 'neodebug'
+            keyAlias 'neo'
+            keyPassword 'neodebug'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.neo
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.neo
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}

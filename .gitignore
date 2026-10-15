@@ -1,0 +1,11 @@
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+# Doplnek Meta tlacitka - pridava ho CI (viz build.yml), neni v gitu
+app/src/main/assets/meta-addon.apk
+metaaddon/build/

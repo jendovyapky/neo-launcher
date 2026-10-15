@@ -1,0 +1,121 @@
+# Oprava počtu diváků
+• Okno Streamovat ukazovalo nesmyslně moc diváků (třeba 25). Počítala se i spojení, která už dávno skončila – třeba když počítač usnul nebo vypadla Wi-Fi. Teď Quest takové mrtvé spojení do pár vteřin pozná a zavře, takže počet sedí a zbytečně se neplýtvá výkonem
+
+# Baterka Questu připnutá v rohu
+• Na liště streamu v prohlížeči je vpravo špendlík. Když ho zapneš, při sledování zůstane v pravém dolním rohu obrazu malá pilulka s baterkou Questu – zbytek lišty se schová jako dřív. Pohneš myší a je tam celá lišta
+• Prohlížeč si připnutí pamatuje
+• Baterka na liště je hezčí a líp zarovnaná
+
+# Baterie Questu na počítači
+• Když streamuješ do prohlížeče, na liště dole je teď baterka Questu s procenty – zelená, pod 50 % oranžová, pod 20 % růžová a bliká. Při nabíjení má blesk
+
+# Streamování do prohlížeče
+• Dlaždice Streamovat v rychlém menu otevře nové okno: dej Spustit vysílání a na počítači ve stejné Wi-Fi otevři quest.jendovyapky.eu – Quest se tam najde sám a obraz jede v prohlížeči, plynule a i se zvukem
+• Zvuk je na počítači na začátku vypnutý, ať hru ve stejné místnosti neslyšíte dvakrát. Zapneš ho tlačítkem Zvuk – sám se srovná s obrazem a pod třemi tečkami doladíš hlasitost a posun (třeba pro bezdrátový reproduktor)
+• Poprvé se Quest zeptá na povolení nahrávat obrazovku a zvuk her – mikrofon se nepoužívá
+• Když vysílání běží, dlaždice svítí a píše Vysílá. Zastavíš ho ve stejném okně
+• Původní sdílení Questu (do televize, nahrávání, snímky) je v okně Streamovat pod tlačítkem Sdílení Questu
+
+# Hra na pozadí, upozornění na baterii a vypnutí Questu
+• Neo si teď samo hlídá hru, která běží na pozadí, a dole ukáže lištu Pokračovat / Ukončit – i když Neo otevřeš jinak než přes Meta tlačítko. Hra už tak nebude potichu vybíjet baterku
+• Kdyby lišta ukazovala hru, kterou jsi už zavřel, klepni na ✕ – pro tuhle hru se neukáže, dokud ji zase nespustíš
+• Meta tlačítko ve hře lépe pozná, že hraješ (i když Quest hru pod menu pozastaví) – nechá menu Questu a Neo se přes hru neotevře. 3× Meta má víc času
+• Upozornění na slabou baterii (20 a 10 %) a na nabití na 100 % i mimo Neo, třeba ve hře. Vypnout jde v Nastavení → Quest
+• Vypnout v rychlém menu otevře nové okno Nea: Uspat, Restartovat, Vypnout – místo ošklivé systémové nabídky
+• Nová verze doplňku Meta tlačítka – Neo ti ji samo jednou nabídne. Když nemáš povolený Přístup k využití, Neo si o něj taky řekne (bez něj hru na pozadí nepozná)
+
+# Meta tlačítko ve hře
+• Ve hře teď Meta ukáže menu Questu (Pokračovat / Ukončit) a Neo se přes hru neotevře – když máš v Nastavení → Quest zapnuté „Ve hře menu Questu“
+• 3× Meta ve hře otevře Neo a dole je lišta s hrou, která běží na pozadí (Pokračovat / Ukončit)
+• Po skončení hry se Neo otevře, jen když hra opravdu skončila – ne při otevření menu Questu ve hře
+• Že běží hra, teď Neo pozná podle herního času (Přístup k využití). Když ho nemáš povolený, v Nastavení → Quest u Meta tlačítka je tlačítko Povolit
+• Doplněk Meta tlačítka má novou verzi – v Nastavení → Quest klepni u Meta tlačítka na Aktualizovat
+
+# Meta tlačítko jako doplněk (stejně jako u Lightning Launcheru)
+• Meta tlačítko teď funguje přes malý doplněk „Neo – Meta tlačítko“, který si Neo nainstaluje samo – stejně jako to dělá Lightning Launcher. Android ho pak pustí zapnout bez „Omezeného nastavení“
+• Nastavení → Quest → Meta tlačítko: Nainstalovat → potvrď instalaci → otevře se Přístupnost, kde zapneš „Neo – Meta tlačítko“
+• Meta se teď pozná stejně jako v Lightning Launcheru – podle okna Knihovny (dřív Neo hledalo jiné okno, a proto nereagovalo)
+• Na doplňku stojí i otevření Nea po zapnutí Questu, 3× Meta, Uspat, Vypnout a Ukončit
+• Kdyby se po Meta otevíraly oba launchery, v Přístupnosti vypni službu Lightning Launcheru
+
+# Opravy po testu na Questu
+• Zapnutí Meta tlačítka teď otevírá Přístupnost v nastavení Androidu (dřív se otevřelo prázdné Nastavení Questu). Když Android napíše „Omezené nastavení“: v Nastavení → Quest klepni u „Omezené nastavení?“ na Info o Neu, vpravo nahoře tři tečky → Povolit omezená nastavení, a pak znovu Zapnout
+• Nová volba Android nastavení – v rychlém menu (dlaždice Android místo Nastavení Questu) i v Nastavení → Quest
+• Streamovat otevře aplikaci Fotoaparát Questu, kde je sdílení obrazu, nahrávání a snímky (starý odkaz na novém Questu nic nedělal)
+• Info o aplikaci a Ukončit teď míří do nastavení Androidu, kde je Vynutit ukončení
+• Paralaxa je pryč
+• Nástup karet při otevření je výraznější a spustí se, až je okno opravdu vidět (i při otevření přes Meta tlačítko)
+
+# 3× Meta, odhad výdrže a uspání z Nea
+• Třikrát rychle zmáčkni Meta ve hře nebo aplikaci: otevře se Neo a dole lišta s tím, co běží na pozadí – Pokračovat, Ukončit, nebo ji schovat. Když pak v Neu zmáčkneš Meta zase třikrát, vrátíš se do hry. Zapíná se v Nastavení → Quest a potřebuje službu Meta tlačítka
+• Ukončit aplikaci zvládne Neo samo: na chvilku otevře informace o aplikaci a klepne za tebe na „Vynutit ukončení“
+• Rychlé menu má nové dlaždice: Streamovat (sdílení obrazu do televize nebo telefonu, nahrávání a snímky), Uspat a Vypnout (nabídka vypnutí a restartu). Uspat a Vypnout taky potřebují službu Meta tlačítka. Dlaždice Fotoaparát ustoupila – nahrávání a snímky najdeš ve Streamovat
+• Rychlé menu ukazuje, jak dlouho ještě baterie vydrží (Neo se učí z toho, kolik baterie ubude při hraní), a při nabíjení, za jak dlouho bude nabito. Odhad je i v upozornění na slabou baterii
+• Levá lišta je zase krycí – po rozbalení přes ni neprosvítají karty
+• Opravené plochy, které se místo výplně kreslily jen jako obrys (třeba zvýraznění v levé liště)
+
+# Živá bublina, tekuté sklo a přesouvání karet
+• Po zapnutí Questu se rovnou otevře Neo (Nastavení → Quest, potřebuje zapnutou službu Meta tlačítka)
+• Horní bublina ožila: když se něco děje, čas a baterie se v ní na chvíli promění – instalace APK s kroužkem průběhu, stahování nové verze Nea, záloha, začátek nabíjení (i odhad, za jak dlouho bude nabito), nabito na 100 % nebo slabá baterie. Místo vyskakovacích hlášek teď oznámení ukazuje právě bublina
+• Horní bublina je z tekutého skla: karty, které pod ni zajedou, se u jejího okraje lomí jako ve skutečném skle a jemně se rozloží barvy
+• Okraj skla chytá světlo laseru – kde je laser blízko hrany panelu, horní bubliny nebo levé lišty, hrana se rozsvítí
+• Přesouvání karet: když kartu zvedneš a táhneš, ostatní se jemně třesou, trochu ustoupí z cesty a na místě, kam karta dopadne, je vidět skleněná jamka
+
+# Instalace APK, velikost her, záloha a paralaxa
+• Nastavení → Aplikace → Nainstalovat APK: vybereš soubor stažený třeba v prohlížeči Questu a nainstaluješ ho bez PC
+• Když podržíš kartu, v menu je vidět, kolik hra zabírá. V Nastavení → Aplikace přibylo řazení „Velikost“ (největší první). Obojí potřebuje stejné povolení jako herní čas
+• Nastavení → O Neo: záloha nastavení (pořadí, oblíbené, jména i vlastní obrázky) do jednoho souboru a obnova – po přeinstalaci, nebo ji pošli kamarádovi
+• Paralaxa: karty se jemně posouvají za laserem, horní lišta a levý panel proti němu, takže panel působí do hloubky. Na kartě pod laserem jde obrázek za laserem, název proti němu a přes kartu přejede odlesk (vypnout jde v Nastavení → Vzhled)
+
+# Meta tlačítko a nástup karet
+• Meta tlačítko teď otevře Neo samo: v Nastavení → Quest klepni u „Meta tlačítko otevře Neo“ na Zapnout a v Přístupnosti zapni službu „Neo – Meta tlačítko“. Doplněk z Lightning Launcheru už není potřeba
+• Když je Neo otevřené, další zmáčknutí Meta ukáže menu Questu – k nastavení Questu se dostaneš vždycky
+• Ve hře Meta ukáže menu Questu (Pokračovat / Ukončit), ne Neo přes hru
+• Po ukončení hry se rovnou otevře Neo (jde vypnout)
+• Při otevření se karty hezky poskládají na svá místa
+• Karta pod laserem víc svítí barvou hry do skla kolem sebe
+• Karusel: pryč je počet spuštění a datum instalace, nápověda dole jde zapnout v Nastavení → Vzhled
+
+# Nové sklo, barvy a ikonky
+• Sklo je skutečně průhledné: za oknem prosvítají rozmazané barvy her a okraj se leskne jako u opravdového skla (nahoře světlejší, po stranách slábne)
+• Nová barevná paleta – tmavá, perlová, šedomodrá a jen pár barevných akcentů (kobaltová, jantarová, purpurová)
+• Všechny ikonky jsou nové, v jednom jednoduchém stylu
+• Najetí laserem už nesvítí modře – dlaždice se jen jemně rozjasní a pod laserem je měkké světlo
+• Vybrané volby a hlavní tlačítka jsou perlové s jemným duhovým nádechem
+• Nadpis v nastavení má kolem sebe víc místa
+• Baterie: do 50 % jantarová, pod 20 % purpurová
+
+# Doladění vzhledu
+• Obsah nastavení, hledání a novinek se u okraje jemně rozplyne, místo aby byl ostře useknutý
+• Hodiny v rychlém menu mají nad sebou víc místa
+• V nastavení je u času název dne a u data měsíc
+
+# Úhlednější vzhled
+• Mezery a zaoblení rohů jsou teď všude stejné – rychlé menu, hledání, nastavení i ostatní okna do sebe líp zapadají
+• V horní liště je jen čas, celé datum najdeš v rychlém menu
+• Rychlé menu: baterie a Wi-Fi jsou nahoře vedle sebe a mezi všemi prvky je stejná mezera
+• Lupa v poli hledání sedí přesně uprostřed svého kolečka
+
+# Hvězdičky, chytré řazení a hledání
+• Oblíbené: v menu karty (podržet kartu) přidáš hvězdičku a hra se drží nahoře
+• Nové řazení v Nastavení → Aplikace: „Nejhranější“ podle herního času a „Chytré“ – nové hry první, pak ty, co hraješ nejvíc
+• Štítek NOVÉ u her, které jsi nainstaloval a ještě nespustil
+• Launcher si pamatuje, kde jsi v mřížce skončil – po návratu ze hry už nemusíš rolovat znovu
+• Hledání: lupa v levé liště, píše se klávesnicí Questu
+• V rychlém menu je naposledy hraná hra – jedním klepnutím zpátky do hry
+• Slabá baterie (pod 20 %) v horní liště svítí červeně
+• V horní liště je ikonka rychlého menu (klepni na čas nebo baterii) a dialogy mají stejné sklo jako zbytek launcheru
+• Po každé aktualizaci se ukáže tohle okno s novinkami
+
+# Nové rozložení
+• Horní lišta je plovoucí bublina napůl zanořená do panelu
+• Vlevo lišta s ikonami (Knihovna, Karusel, Rychlé menu, Nastavení) – po najetí se vysune s popisky
+• Rychlé menu vyjíždí zprava jako boční panel
+
+# Nový vzhled nastavení
+• Nastavení je přehledný dashboard s dlaždicemi a přepínači
+• Volba stylu skla: tmavé, nebo světlé
+
+# Rychlé menu a fyzikální animace
+• Jas, hlasitost, Wi-Fi a zkratky na funkce Questu
+• Plynulé animace na pružinách, dialogy vyrůstají z místa, odkud je otevřeš
