@@ -188,7 +188,9 @@ Když vysílání běží, dlaždice má akcentovou ikonu a název „Vysílá�
   Quest, vpravo druhý (jen soukromá IPv4, port ≥ 1024). Každý rám je obyčejný přehrávač `/` ze svého Questu, takže přehrávač
   se kvůli tomu neměnil a druhý Quest může mít i starší verzi. Běží to ze stránky v Questu, protože https web obraz
   z domácí sítě vložit nesmí. Web nabídne „Oba vedle sebe“, když vysílají dva a aspoň jeden hlásí `v` = `neo2`+
-  (`Discovery.VERSION`) – ten je hostitel. Neověřeno na dvou headsetech.
+  (`Discovery.VERSION`) – ten je hostitel. Rozložení (vedle sebe / pod sebou) se volí samo podle
+  toho, kde vyjde obraz větší (poměr stran z `/stats` → `out`), tlačítko ho přepne natrvalo (localStorage `qc.duo`).
+  Neověřeno na dvou headsetech.
 - Web, protokol a maskot jsou v repu **`jendovyapky/quest`** (Cloudflare Worker + `public/`, poznámky
   v jeho CLAUDE.md). `assets/cast/quba.js` a `index.html` jsou kopie odtamtud – měnit oba.
   Samostatná appka Quest Cast (`com.jendovyapky.questcast`, `jendovyapky/quest/android`) je tímhle nahrazená;

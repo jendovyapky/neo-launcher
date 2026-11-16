@@ -12,7 +12,7 @@
     font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
   #split { position: fixed; inset: 0; display: flex; gap: 2px; background: #07080c; }
   #split iframe { flex: 1 1 0; min-width: 0; min-height: 0; border: 0; background: #000; }
-  @media (orientation: portrait) { #split { flex-direction: column; } }
+  #split.col { flex-direction: column; }
   /* ovladani: nenapadna pilulka nahore uprostred (mys nad obrazem patri prehravaci v ramu) */
   #bar { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; gap: 4px;
     padding: 4px; border-radius: 999px; background: rgba(20, 23, 32, .72); border: 1px solid rgba(255,255,255,.08);
@@ -27,7 +27,8 @@
 <body>
 <div id="split"></div>
 <div id="bar" hidden>
-  <button id="swap" title="Prohodit levý a pravý obraz">Prohodit</button>
+  <button id="swap" title="Prohodit obrazy mezi sebou">Prohodit</button>
+  <button id="lay" title="Přepnout: obrazy pod sebou / vedle sebe"></button>
   <button id="fs" title="Oba obrazy přes celou obrazovku">Celá obrazovka</button>
   <a id="back" href="https://quest.jendovyapky.eu/" title="Zpět na výběr Questu">Zpět</a>
 </div>
@@ -54,6 +55,29 @@ if (!ok) {
   $('#bar').hidden = false;
   // prohozeni jen poradim v rozlozeni - ramy se nenacitaji znovu, obraz bezi dal
   $('#swap').onclick = () => { const s = $('#split'); s.firstElementChild.style.order = s.firstElementChild.style.order === '1' ? '' : '1'; };
+  // Rozlozeni: samo vybere to, kde vyjde obraz vetsi (stream na sirku -> pod sebou, na vysku -> vedle sebe).
+  // Tlacitko ho prepne natrvalo (localStorage qc.duo = row | col).
+  let ar = 16 / 9, forced = null;
+  try { const f = localStorage.getItem('qc.duo'); if (f === 'row' || f === 'col') forced = f; } catch {}
+  function layout() {
+    // sirka obrazu v kazdem rozlozeni: vedle sebe ho omezuje pulka sirky, pod sebou pulka vysky
+    const row = Math.min(innerWidth / 2, innerHeight * ar), col = Math.min(innerWidth, innerHeight / 2 * ar);
+    const isCol = forced ? forced === 'col' : col > row;
+    $('#split').classList.toggle('col', isCol);
+    $('#lay').textContent = isCol ? 'Vedle sebe' : 'Pod sebe';
+  }
+  $('#lay').onclick = () => {
+    forced = $('#split').classList.contains('col') ? 'row' : 'col';
+    try { localStorage.setItem('qc.duo', forced); } catch {}
+    layout();
+  };
+  addEventListener('resize', layout);
+  layout();
+  // pomer stran streamu z tohohle Questu (druhy miva stejny)
+  fetch('/stats', { cache: 'no-store' }).then((r) => r.json()).then((st) => {
+    const o = /^(\d+)x(\d+)$/.exec(st.out || '');
+    if (o && +o[1] > 0 && +o[2] > 0) { ar = o[1] / o[2]; layout(); }
+  }).catch(() => {});
   $('#fs').onclick = () => {
     const d = document.documentElement;
     if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
