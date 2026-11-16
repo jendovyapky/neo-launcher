@@ -1,0 +1,51 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'com.neolauncher'
+    compileSdk = 36
+
+    defaultConfig {
+        // Stejne ID jako predchozi Neo fork - addon pro Meta tlacitko
+        // (RedirectServices) tohle ID uz zna a otevira ho prioritne.
+        applicationId 'com.neolauncher.v1'
+        minSdkVersion 31
+        targetSdkVersion 34
+        // Cislo buildu z GitHub Actions (github.run_number) - kazdy build ma
+        // vyssi versionCode, takze ho aktualizator v launcheru pozna jako novejsi.
+        def buildNumber = (System.getenv('NEO_BUILD_NUMBER') ?: '0') as int
+        versionCode 2000 + buildNumber
+        versionName "2.0.${buildNumber}"
+    }
+
+    signingConfigs {
+        // Pevny klic v repu = kazdy build z CI jde nainstalovat PRES
+        // predchozi verzi (adb install -r) a nastaveni zustane zachovane.
+        // Je to jen klic pro sideload, zadne tajemstvi.
+        neo {
+            storeFile rootProject.file('keystore/neo-debug.keystore')
+            storePassword 'neodebug'
+            keyAlias 'neo'
+            keyPassword 'neodebug'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.neo
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.neo
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}

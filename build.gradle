@@ -1,0 +1,18 @@
+// Neo Launcher 2.0 - vlastni launcher pro Meta Quest 3S.
+// Verze AGP/Gradle odpovidaji Lightning Launcheru (overene v GitHub Actions).
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:9.2.1'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}

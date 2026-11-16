@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sluzba Meta tlacitka: sleduje zmeny oken (kdo je v popredi, kdy se otevre
+     Navigator / Knihovna Questu). Obsah okna cte jen kvuli poznani Navigatoru,
+     klepnuti na "Vynutit ukonceni" (Ukoncit v Neu) a na Vypnout / Restartovat
+     v systemove nabidce vypnuti (ta je v jinem okne -> flagRetrieveInteractiveWindows). -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/service_desc"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagIncludeNotImportantViews|flagRetrieveInteractiveWindows"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="0" />

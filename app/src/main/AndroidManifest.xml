@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Atribut <layout> Android Studio hlasi jako neplatny, ale na Questu funguje
+     (nastavuje vychozi velikost panelu). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Prikazy pro doplnek "Neo - Meta tlacitko" (uspat, vypnout, ukoncit aplikaci).
+         Signature = smi jen aplikace se stejnym klicem. Definuje ho i doplnek. -->
+    <permission
+        android:name="com.neolauncher.permission.CONTROL"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="com.neolauncher.permission.CONTROL" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Streamovat (com.neolauncher.cast): nahravani obrazu a zvuku her do prohlizece.
+         RECORD_AUDIO je jen pro zachytavani zvuku her, mikrofon se nepouziva. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- Aktualizace launcheru z GitHubu (system se vzdy zepta na potvrzeni). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:ignore="RequestInstallPackagesPolicy" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+    <!-- Herni cas v karuselu (UsageStats) - jako plugin v Lightning Launcheru.
+         Uzivatel ho musi povolit v Nastaveni -> Pristup k vyuziti. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <!-- Jen kdyz ho uzivatel jednou povoli z PC (adb shell pm grant ... WRITE_SECURE_SETTINGS):
+         Neo si pak samo zapne sluzbu Meta tlacitka - obejde "Omezene nastaveni" Androidu. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <!-- Posuvnik jasu v rychlem menu (Settings.System.SCREEN_BRIGHTNESS), uzivatel
+         povoli v "Uprava systemovych nastaveni" - stejne jako QuestDim. -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
+    <uses-feature android:name="android.hardware.vr.headtracking" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+    <application
+        android:name=".NeoApp"
+        android:icon="@mipmap/app_icon"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.Neo"
+        android:hardwareAccelerated="true"
+        android:supportsRtl="false"
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:ignore="UnusedAttribute,MissingApplicationIcon">
+
+        <meta-data android:name="com.oculus.supportedDevices" android:value="all" />
+
+        <!-- Streamovat: nahravani bezi v oddelenem procesu, pad streamovani nikdy neshodi launcher -->
+        <activity
+            android:name=".cast.CastStartActivity"
+            android:process=":cast"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <service
+            android:name=".cast.CaptureService"
+            android:process=":cast"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
+        <activity
+            android:name=".LauncherActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:stateNotNeeded="true"
+            android:windowSoftInputMode="adjustNothing"
+            android:configChanges="density|keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+            android:theme="@style/Theme.Neo">
+
+            <meta-data android:name="com.oculus.vrdesktop.control_bar_config"
+                android:value="{'with_back_button':false}" />
+            <!-- Quest 3/3S (Horizon OS v77+): system rozmaze prostredi za
+                 pruhlednym panelem = efekt "skla v ruce". -->
+            <meta-data android:name="com.oculus.vrshell.supports_blend_effects"
+                android:value="true" />
+            <meta-data android:name="com.oculus.vrshell.supports_free_resizing"
+                android:value="true" />
+            <meta-data android:name="com.oculus.vrshell.free_resizing_limits"
+                android:value="500,2200,360,1400" />
+            <meta-data android:name="com.oculus.lazy_gpumem_allocation"
+                android:value="true" />
+
+            <!-- Okno je vetsi nez skleneny panel: vlevo lista s ikonami, nahore
+                 plovouci horni lista, v pruhlednem okraji muze hovernuta karta
+                 "vyskocit" ven z panelu. -->
+            <layout android:defaultWidth="1176dp" android:defaultHeight="664dp"
+                android:gravity="center" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="com.oculus.intent.category.2D" />
+            </intent-filter>
+        </activity>
+
+        <!-- Stav pro doplnek "Neo - Meta tlacitko" (a starsi RedirectServices
+             z Lightning Launcheru): je launcher otevreny, co chce uzivatel
+             (menu ve hre, po hre, po zapnuti, 3x Meta). -->
+        <provider
+            android:name=".ShortcutStateProvider"
+            android:authorities="${applicationId}.shortcutStateProvider"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            tools:ignore="ExportedContentProvider" />
+        <!-- Vysledek instalace aktualizace (PackageInstaller). -->
+        <receiver
+            android:name=".update.InstallReceiver"
+            android:exported="false" />
+    </application>
+</manifest>
