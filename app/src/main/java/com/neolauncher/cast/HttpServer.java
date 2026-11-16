@@ -19,6 +19,7 @@ import java.util.Locale;
 /**
  * Maly HTTP server bez knihoven:
  *   /           stranka s prehravacem
+ *   /duo?b=IP:port  dva Questy vedle sebe (tenhle + druhy z domaci site), kazdy ve svem ramu
  *   /jmuxer.js  prehravac H.264 (MSE) z assets
  *   /quba.js    maskot
  *   /video      nekonecny stream snimku H.264 (Annex-B), hlavicka viz writePacket
@@ -29,7 +30,7 @@ import java.util.Locale;
 class HttpServer extends Thread {
 
     private final int port;
-    private final byte[] jmuxer, page, quba;
+    private final byte[] jmuxer, page, quba, duo;
     private ServerSocket socket;
 
     HttpServer(Context ctx, int port) throws IOException {
@@ -39,6 +40,7 @@ class HttpServer extends Thread {
         jmuxer = asset(ctx, "cast/jmuxer.min.js");
         page = asset(ctx, "cast/index.html");
         quba = asset(ctx, "cast/quba.js");
+        duo = asset(ctx, "cast/duo.html");
     }
 
     private static byte[] asset(Context ctx, String name) throws IOException {
@@ -88,6 +90,8 @@ class HttpServer extends Thread {
             OutputStream out = s.getOutputStream();
             if (path.equals("/") || path.startsWith("/?")) {
                 send(out, "200 OK", "text/html; charset=utf-8", page);
+            } else if (path.equals("/duo") || path.startsWith("/duo?")) {
+                send(out, "200 OK", "text/html; charset=utf-8", duo);
             } else if (path.startsWith("/quba.js")) {
                 send(out, "200 OK", "text/javascript; charset=utf-8", quba);
             } else if (path.startsWith("/jmuxer.js")) {

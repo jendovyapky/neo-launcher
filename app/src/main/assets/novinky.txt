@@ -1,3 +1,9 @@
+# Dva Questy vedle sebe
+• Když ve stejné Wi-Fi vysílají dva Questy, na quest.jendovyapky.eu přibude tlačítko „Oba vedle sebe“ – oba obrazy na jedné stránce
+• Každá půlka je samostatný přehrávač se svým zvukem, kvalitou i celou obrazovkou. Když jeden Quest vypadne, druhý běží dál
+• Nahoře jde obrazy prohodit, dát oba přes celou obrazovku nebo se vrátit na výběr
+• Obyčejné sledování jednoho Questu se nemění. Novou verzi Nea potřebují oba Questy
+
 # Oprava počtu diváků
 • Okno Streamovat ukazovalo nesmyslně moc diváků (třeba 25). Počítala se i spojení, která už dávno skončila – třeba když počítač usnul nebo vypadla Wi-Fi. Teď Quest takové mrtvé spojení do pár vteřin pozná a zavře, takže počet sedí a zbytečně se neplýtvá výkonem
 

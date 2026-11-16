@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Quest Cast – dva Questy</title>
+<style>
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: #07080c; color: #eef1f6; overflow: hidden;
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #split { position: fixed; inset: 0; display: flex; gap: 2px; background: #07080c; }
+  #split iframe { flex: 1 1 0; min-width: 0; min-height: 0; border: 0; background: #000; }
+  @media (orientation: portrait) { #split { flex-direction: column; } }
+  /* ovladani: nenapadna pilulka nahore uprostred (mys nad obrazem patri prehravaci v ramu) */
+  #bar { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; gap: 4px;
+    padding: 4px; border-radius: 999px; background: rgba(20, 23, 32, .72); border: 1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); opacity: .4; transition: opacity .25s ease; }
+  #bar:hover, #bar:focus-within { opacity: 1; }
+  #bar button, #bar a { all: unset; cursor: pointer; padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: 13px; }
+  #bar button:hover, #bar a:hover { background: rgba(255,255,255,.12); }
+  #err { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+  #err a { color: #7fd4ff; }
+</style>
+</head>
+<body>
+<div id="split"></div>
+<div id="bar" hidden>
+  <button id="swap" title="Prohodit levý a pravý obraz">Prohodit</button>
+  <button id="fs" title="Oba obrazy přes celou obrazovku">Celá obrazovka</button>
+  <a id="back" href="https://quest.jendovyapky.eu/" title="Zpět na výběr Questu">Zpět</a>
+</div>
+<div id="err" hidden><p>Chybí adresa druhého Questu. <a href="https://quest.jendovyapky.eu/">Zpět na výběr</a></p></div>
+<script>
+// Dva Questy vedle sebe: kazda pulka je obycejny prehravac (ram) primo ze sveho Questu,
+// takze se navzajem neovlivni a kdyz jeden vypadne, druhy bezi dal.
+const $ = (s) => document.querySelector(s);
+const b = new URLSearchParams(location.search).get('b') || '';
+// druhy Quest smi byt jen adresa z domaci site (stejne pravidlo jako na quest.jendovyapky.eu)
+const m = b.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3}):(\d{4,5})$/);
+const ok = m && m.slice(1, 5).every((x) => +x <= 255) && +m[5] >= 1024 && +m[5] <= 65535
+  && (+m[1] === 10 || (+m[1] === 172 && +m[2] >= 16 && +m[2] <= 31) || (+m[1] === 192 && +m[2] === 168));
+if (!ok) {
+  $('#err').hidden = false;
+} else {
+  for (const host of [location.host, b]) {
+    const f = document.createElement('iframe');
+    f.src = 'http://' + host + '/';
+    f.allow = 'autoplay; fullscreen';
+    f.allowFullscreen = true;
+    $('#split').append(f);
+  }
+  $('#bar').hidden = false;
+  // prohozeni jen poradim v rozlozeni - ramy se nenacitaji znovu, obraz bezi dal
+  $('#swap').onclick = () => { const s = $('#split'); s.firstElementChild.style.order = s.firstElementChild.style.order === '1' ? '' : '1'; };
+  $('#fs').onclick = () => {
+    const d = document.documentElement;
+    if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else (d.requestFullscreen || d.webkitRequestFullscreen)?.call(d);
+  };
+}
+</script>
+</body>
+</html>

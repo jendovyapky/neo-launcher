@@ -29,7 +29,8 @@ final class Discovery {
     private Discovery() {}
 
     static final String HOST = "quest.jendovyapky.eu";
-    static final String VERSION = "neo";
+    /** "neo2" = umi /duo (dva Questy vedle sebe); web podle toho nabidne tlacitko. */
+    static final String VERSION = "neo2";
     private static final long EVERY_MS = 25_000;
 
     private static Thread thread;
